@@ -33,7 +33,7 @@ class FlyViewService : Service() {
         val key = intent!!.getStringExtra("key")!!
 
         startForeground(1, notification)
-        showOnFLyNote(key)
+        showView(key)
         return START_STICKY_COMPATIBILITY
     }
 
@@ -42,7 +42,7 @@ class FlyViewService : Service() {
         wm = applicationContext.getSystemService(WINDOW_SERVICE) as WindowManager
     }
 
-    private fun showOnFLyNote(
+    private fun showView(
         key: String
     ) {
         if (!Settings.canDrawOverlays(this))
@@ -55,7 +55,6 @@ class FlyViewService : Service() {
                 })
         else FlyView.infos[key]?.run {
             val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
-
             val flyScope = FlyViewScope(
                 params = params,
                 removeView = {
@@ -66,7 +65,7 @@ class FlyViewService : Service() {
                     }
                 }
             ) {
-                wm.addView(showedViews[key], params)
+                wm.updateViewLayout(showedViews[key], params)
             }
 
             val flyView = FlyView(
@@ -90,6 +89,8 @@ class FlyViewService : Service() {
     }
 
     private fun addView(key: String, view: FlyView, params: WindowManager.LayoutParams) {
+        if (showedViews.containsKey(key))
+            return
         showedViews[key] = view
         wm.addView(view, params)
     }
