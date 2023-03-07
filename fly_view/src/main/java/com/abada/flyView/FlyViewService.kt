@@ -53,11 +53,11 @@ class FlyViewService : Service() {
                 ).also {
                     it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 })
-        else FlyView.infos[key]?.run {
+        else (FlyView.infos[key] as? FlyViewInfo<Any>)?.run {
             val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
             val flyScope = FlyViewScope(
                 params = params,
-                controller = controller,
+                controller = controller?:Unit,
                 removeView = {
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih

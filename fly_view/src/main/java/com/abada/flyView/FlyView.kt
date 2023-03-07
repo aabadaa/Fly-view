@@ -77,7 +77,7 @@ class FlyView constructor(
     override fun getAccessibilityClassName(): CharSequence = javaClass.name
 
     companion object {
-        val infos = mutableMapOf<String, FlyViewInfo<Any>>()
+        val infos = mutableMapOf<String, FlyViewInfo<*>>()
     }
 }
 
@@ -104,6 +104,7 @@ private class LifeCycle : SavedStateRegistryOwner {
 }
 
 data class FlyViewInfo<T>(
+    val controller: T,
     val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -112,14 +113,13 @@ data class FlyViewInfo<T>(
         PixelFormat.TRANSLUCENT
     ).also { it.windowAnimations = android.R.style.Animation },
     val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
-    val controller: T? = null,
     val content: @Composable FlyViewScope<T>.() -> Unit,
 )
 
 class FlyViewScope<T>(
     params: WindowManager.LayoutParams,
     val removeView: () -> Unit,
-    val controller: T?,
+    val controller: T,
     private val updateLayoutParams: (WindowManager.LayoutParams) -> Unit,
 ) {
     var params: WindowManager.LayoutParams = params

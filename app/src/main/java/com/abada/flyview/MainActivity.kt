@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FlyView.infos["test"] = FlyViewInfo(controller = this) {
+            controller
             var x by remember { mutableStateOf(0) }
             Column {
                 Text(text = "test $x")
@@ -36,7 +37,21 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        FlyView.infos["test"] = FlyViewInfo(controller = Unit){
 
+            var x by remember { mutableStateOf(0) }
+            Column {
+                Text(text = "test $x")
+                Button(onClick = removeView) {
+                    Text("Close")
+                }
+                Button(onClick = {
+                    x++
+                }) {
+                    Text("x++")
+                }
+            }
+        }
         setContent {
             FLyViewTheme() {
                 // A surface container using the 'background' color from the theme
