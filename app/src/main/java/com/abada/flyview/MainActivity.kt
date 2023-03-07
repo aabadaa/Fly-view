@@ -21,33 +21,37 @@ import com.abada.flyview.ui.theme.FLyViewTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FlyView.infos["test"] = FlyViewInfo(controller = this) {
-            var x by remember { mutableStateOf(0) }
-            Column {
-                Text(text = "test $x")
-                Button(onClick = removeView) {
-                    Text("Close")
-                }
-                Button(onClick = {
-                    x++
-                }) {
-                    Text("x++")
+        FlyView.infoProviders["test"] = {
+            FlyViewInfo(controller = this) {
+                var x by remember { mutableStateOf(0) }
+                Column {
+                    Text(text = "test $x")
+                    Button(onClick = removeView) {
+                        Text("Close")
+                    }
+                    Button(onClick = {
+                        x++
+                    }) {
+                        Text("x++")
+                    }
                 }
             }
         }
 
-        FlyView.infos["test"] = FlyViewInfo(controller = Unit){
+        FlyView.infoProviders["test"] = {
+            FlyViewInfo(controller = Unit) {
 
-            var x by remember { mutableStateOf(0) }
-            Column {
-                Text(text = "test $x")
-                Button(onClick = removeView) {
-                    Text("Close")
-                }
-                Button(onClick = {
-                    x++
-                }) {
-                    Text("x++")
+                var x by remember { mutableStateOf(0) }
+                Column {
+                    Text(text = "test $x")
+                    Button(onClick = removeView) {
+                        Text("Close")
+                    }
+                    Button(onClick = {
+                        x++
+                    }) {
+                        Text("x++")
+                    }
                 }
             }
         }

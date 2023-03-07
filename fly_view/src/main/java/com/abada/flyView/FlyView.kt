@@ -77,7 +77,7 @@ class FlyView constructor(
     override fun getAccessibilityClassName(): CharSequence = javaClass.name
 
     companion object {
-        val infos = mutableMapOf<String, FlyViewInfo<*>>()
+        val infoProviders = mutableMapOf<String,()-> FlyViewInfo<*>>()
     }
 }
 
