@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FlyView.infos["test"] = FlyViewInfo(controller = this) {
-            controller
             var x by remember { mutableStateOf(0) }
             Column {
                 Text(text = "test $x")

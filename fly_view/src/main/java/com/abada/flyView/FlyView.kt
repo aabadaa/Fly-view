@@ -105,15 +105,15 @@ private class LifeCycle : SavedStateRegistryOwner {
 
 data class FlyViewInfo<T>(
     val controller: T,
-    val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
+    internal val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
         PixelFormat.TRANSLUCENT
     ).also { it.windowAnimations = android.R.style.Animation },
-    val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
-    val content: @Composable FlyViewScope<T>.() -> Unit,
+    internal val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
+    internal val content: @Composable FlyViewScope<T>.() -> Unit,
 )
 
 class FlyViewScope<T>(
