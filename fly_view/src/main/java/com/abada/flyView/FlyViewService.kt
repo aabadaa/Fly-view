@@ -57,6 +57,7 @@ class FlyViewService : Service() {
             val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
             val flyScope = FlyViewScope(
                 params = params,
+                controller = controller,
                 removeView = {
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
@@ -81,7 +82,6 @@ class FlyViewService : Service() {
                     flyScope.content()
                 }
             )
-
             addView(key, flyView, params)
         } ?: run {
             throw java.lang.NullPointerException("there is no view linked with the  key $key.")
