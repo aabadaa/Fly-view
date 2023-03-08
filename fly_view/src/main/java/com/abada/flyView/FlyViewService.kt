@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.view.WindowManager
@@ -15,8 +16,7 @@ import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
 
 class FlyViewService : Service() {
-
-    private val showedViews: MutableMap<String, FlyView> = mutableMapOf()
+    private val showedViews: MutableMap<String, FlyViewInfo<*>> = mutableMapOf()
     private lateinit var wm: WindowManager
     private val ID = "flyViewService"
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -34,6 +34,9 @@ class FlyViewService : Service() {
 
         startForeground(1, notification)
         showView(key)
+        intent.extras?.let {
+            showedViews[key]!!.controller.update(it)
+        }
         return START_STICKY_COMPATIBILITY
     }
 
@@ -53,7 +56,7 @@ class FlyViewService : Service() {
                 ).also {
                     it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 })
-        else (FlyView.infoProviders[key]?.invoke() as? FlyViewInfo<Any>)?.run {
+        else (FlyView.infoProviders[key]?.invoke() as? FlyViewInfo<FlyController>)?.run {
             val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
             val flyScope = FlyViewScope(
                 params = params,
@@ -66,7 +69,7 @@ class FlyViewService : Service() {
                     }
                 }
             ) {
-                wm.updateViewLayout(showedViews[key], params)
+                wm.updateViewLayout(flyView, params)
             }
 
             val flyView = FlyView(
@@ -82,26 +85,28 @@ class FlyViewService : Service() {
                     flyScope.content()
                 }
             )
-            addView(key, flyView, params)
+            this.flyView = flyView
+            addView(key, this, params)
         } ?: run {
             throw java.lang.NullPointerException("there is no view linked with the  key $key.")
         }
     }
 
-    private fun addView(key: String, view: FlyView, params: WindowManager.LayoutParams) {
+    private fun addView(key: String, viewInfo: FlyViewInfo<*>, params: WindowManager.LayoutParams) {
         if (showedViews.containsKey(key))
             return
-        showedViews[key] = view
-        wm.addView(view, params)
+        showedViews[key] = viewInfo
+        wm.addView(viewInfo.flyView, params)
     }
 
     private fun removeView(key: String) {
-        val flyView = showedViews.remove(key)!!
-        flyView.removeView(flyView.rootView)
-        wm.removeView(flyView)
-        if(showedViews.isEmpty())
+        val flyViewInfo = showedViews.remove(key)!!
+        flyViewInfo.flyView.run {
+            removeView(rootView)
+            wm.removeView(this)
+        }
+        if (showedViews.isEmpty())
             stopForeground(STOP_FOREGROUND_REMOVE)
-
     }
 
     override fun onBind(intent: Intent): IBinder? = null
@@ -110,6 +115,14 @@ class FlyViewService : Service() {
         fun show(context: Context, key: String) {
             Intent(context, FlyViewService::class.java).also {
                 it.putExtra("key", key)
+                context.startForegroundService(it)
+            }
+        }
+
+        fun update(context: Context, key: String, bundle: Bundle) {
+            Intent(context, FlyViewService::class.java).also {
+                it.putExtra("key", key)
+                it.putExtras(bundle)
                 context.startForegroundService(it)
             }
         }
