@@ -8,15 +8,16 @@ this library enables you to add a composable view to the window manager easily u
 			maven { url 'https://jitpack.io' }
 		}
 	}
-### Step 2 Add the dependency
+### Step 2 Add the dependency, get your version from [here](https://jitpack.io/#aabadaa/FLyView)
 	dependencies {
-	        implementation 'com.github.aabadaa:FLyView:1.0'
+	        implementation 'com.github.aabadaa:FLyView:<version>'
 	}
 
 ## Usage
 At first you need to define a ```FlyViewInfo``` like this:
 ```kotlin
-    FlyView.infos["example"] = FlyViewInfo { // you are in the FlyViewScope
+    FlyView.infoProviders["example"] = {
+    FlyViewInfo(NoController) { // you are in the FlyViewScope
         Column {
             Text(text = "example")
             // removeView is a method provided by the FlyViewScope
@@ -31,6 +32,7 @@ At first you need to define a ```FlyViewInfo``` like this:
                 Text("update params")
                }
             }
+    	}
     }
 ```
 Then you can call show method to launch the service, for example:
@@ -48,7 +50,7 @@ this is the scope of your view content which provides you:
 ```removeView()``` which remove the view from the WindowManager.<br>
 ```params``` to access and modify the view layout params.<br>
 ### FlyViewService
-has a static method ```show``` to show a specific view as the previous example.
-
+has a static ```show``` method to show a specific view as the previous example.
+also in ```1.3.1``` it has ```update``` method to send bundle to your controller 
 
 
