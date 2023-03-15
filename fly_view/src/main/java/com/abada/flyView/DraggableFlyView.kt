@@ -5,7 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-
+/**
+ *
+ * This method makes your flyView draggable
+ * @param content- the content of the draggable flyView
+ */
 @Composable
 fun FlyViewScope.DraggableFlyView(content: @Composable () -> Unit) =
     Box(

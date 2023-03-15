@@ -10,7 +10,13 @@ import androidx.compose.ui.platform.AndroidUiDispatcher
 import kotlinx.coroutines.*
 
 private val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
-
+/**
+ * define a FlyViewInfo and call this method to add it to the WindowManager
+ *
+ * @param context any context to create a [android.view.View] object
+ * @param key a string to identify your view when you want to update it using [updateFlyView] method
+ * @param flyViewInfo the info of your fly view that holds your view and your controller
+ */
 fun <T : FlyController> WindowManager.addFlyInfo(
     context: Context,
     key: String,

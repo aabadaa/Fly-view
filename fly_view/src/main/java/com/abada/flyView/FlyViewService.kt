@@ -10,7 +10,13 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import com.abada.flyView.FlyViewService.Companion.show
 
+/**
+ *
+ * This service starts a foreground service when you call [show] method
+ * this can be used to show a [FlyView] when your activity is not running
+ */
 class FlyViewService : Service() {
     private lateinit var wm: WindowManager
     private val ID = "flyViewService"
@@ -51,20 +57,21 @@ class FlyViewService : Service() {
     override fun onBind(intent: Intent): IBinder? = null
 
     companion object {
+        /**
+         * add here your [FlyViewInfo] to enable the service to show it when your call [show] or [update] methods
+         */
         val infoProviders = mutableMapOf<String, () -> FlyViewInfo<in FlyController>>()
 
+        /**
+         * call this method to show a [FlyViewInfo] that you added to the [infoProviders]
+         * @param context a context to start the service
+         * @param key the key you used to add your [FlyViewInfo] to the [infoProviders]
+         * @param bundle an optional bundle that will be passed to your controller [FlyController.update] method
+         */
         fun show(context: Context, key: String, bundle: Bundle? = null) {
             Intent(context, FlyViewService::class.java).also {
                 it.putExtra("key", key)
                 bundle?.run { it.putExtras(this) }
-                context.startForegroundService(it)
-            }
-        }
-
-        fun update(context: Context, key: String, bundle: Bundle) {
-            Intent(context, FlyViewService::class.java).also {
-                it.putExtra("key", key)
-                it.putExtras(bundle)
                 context.startForegroundService(it)
             }
         }
