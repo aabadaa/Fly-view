@@ -52,7 +52,7 @@ this is the scope of your view content which provides you:
 ```removeView()``` which remove the view from the WindowManager.<br>
 ```params``` to access and modify the view layout params.<br>
 ### FlyViewService
-has a static ```show``` method to show a specific view as the previous example.
+has a static ```show``` method to show a specific view as the previous example.<br>
 a map<String,()->FlyViewInfo> to create your ```FlyViewInfo``` provider then the service will use it to add the view to the ```WindowManager``` 
 
 
