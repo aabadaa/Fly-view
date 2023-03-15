@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.abada.flyView.FlyController
-import com.abada.flyView.FlyView
 import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.FlyViewService
 
@@ -21,8 +20,9 @@ class ExampleController : FlyController {
 }
 
 fun Context.createFlyView() {
-    FlyView.infoProviders["test"] = {
-        FlyViewInfo(controller = ExampleController()) {
+    FlyViewService.infoProviders["test"] = {
+        val controller = ExampleController()
+        FlyViewInfo(controller =controller) {
             Column {
                 Text(text = "test ${controller.x}")
                 Button(onClick = removeView) {

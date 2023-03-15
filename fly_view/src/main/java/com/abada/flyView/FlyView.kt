@@ -3,17 +3,11 @@ package com.abada.flyView
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.PixelFormat
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
-import android.view.WindowManager
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Recomposer
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import androidx.compose.ui.platform.compositionContext
@@ -27,10 +21,9 @@ import kotlinx.coroutines.launch
 
 
 @SuppressLint("ViewConstructor")
-class FlyView constructor(
+internal class FlyView constructor(
     context: Context,
     runRecomposeScope: CoroutineScope,
-    private val onDragChanged: FlyView.(Int, Int) -> Unit,
     private val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
     private val content: @Composable () -> Unit,
 ) : AbstractComposeView(context, null, 0) {
@@ -55,14 +48,7 @@ class FlyView constructor(
 
     @Composable
     override fun Content() {
-        Box(modifier = Modifier.pointerInput(Unit) {
-            detectDragGestures { change, dragAmount ->
-                change.consume()
-                onDragChanged(dragAmount.x.toInt(), dragAmount.y.toInt())
-            }
-        }) {
-            content()
-        }
+        content()
         if (isAttachedToWindow) {
             Log.i(ContentValues.TAG, "flyContent: showed")
             createComposition()
@@ -75,10 +61,6 @@ class FlyView constructor(
     }
 
     override fun getAccessibilityClassName(): CharSequence = javaClass.name
-
-    companion object {
-        val infoProviders = mutableMapOf<String, () -> FlyViewInfo<out FlyController>>()
-    }
 }
 
 
@@ -102,40 +84,3 @@ private class LifeCycle : SavedStateRegistryOwner {
     }
 
 }
-
-
-data class FlyViewInfo<T : FlyController>(
-    val controller: T,
-    internal val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
-        WindowManager.LayoutParams.WRAP_CONTENT,
-        WindowManager.LayoutParams.WRAP_CONTENT,
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-        PixelFormat.TRANSLUCENT
-    ).also { it.windowAnimations = android.R.style.Animation },
-    internal val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
-    internal val content: @Composable FlyViewScope<T>.() -> Unit,
-) {
-    internal lateinit var flyView: FlyView
-}
-
-
-interface FlyController {
-    fun update(data: Bundle)
-}
-object NoController:FlyController{
-     override fun update(data: Bundle) {}
-}
-class FlyViewScope<T : FlyController>(
-    params: WindowManager.LayoutParams,
-    val removeView: () -> Unit,
-    val controller: T,
-    private val updateLayoutParams: (WindowManager.LayoutParams) -> Unit,
-) {
-    var params: WindowManager.LayoutParams = params
-        set(value) {
-            updateLayoutParams(value)
-            field = value
-        }
-}
-
