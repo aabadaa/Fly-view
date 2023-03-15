@@ -8,6 +8,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.FlyViewService
@@ -22,16 +23,18 @@ class ExampleController : FlyController {
 fun Context.createFlyView() {
     FlyViewService.infoProviders["test"] = {
         val controller = ExampleController()
-        FlyViewInfo(controller =controller) {
-            Column {
-                Text(text = "test ${controller.x}")
-                Button(onClick = removeView) {
-                    Text("Close")
-                }
-                Button(onClick = {
-                    controller.x++
-                }) {
-                    Text("x++")
+        FlyViewInfo(controller = controller) {
+            DraggableFlyView {
+                Column {
+                    Text(text = "test ${controller.x}")
+                    Button(onClick = removeView) {
+                        Text("Close")
+                    }
+                    Button(onClick = {
+                        controller.x++
+                    }) {
+                        Text("x++")
+                    }
                 }
             }
         }
@@ -39,6 +42,6 @@ fun Context.createFlyView() {
     FlyViewService.show(this, "test")
 }
 
-fun Context.updateFlyView(value: Int) {
-    FlyViewService.update(this, "test", Bundle().also { it.putInt("exampleInt", value) })
+fun updateFlyView(value: Int) {
+    com.abada.flyView.updateFlyView("test", Bundle().also { it.putInt("exampleInt", value) })
 }
