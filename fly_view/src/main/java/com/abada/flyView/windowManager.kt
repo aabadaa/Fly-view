@@ -6,10 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.WindowManager
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import kotlinx.coroutines.*
 
@@ -53,19 +49,7 @@ fun <T : FlyController> WindowManager.addFlyInfo(
             runRecomposeScope = runRecomposeScope,
             keyDispatcher = keyDispatcher,
             content = {
-                Box(modifier = Modifier.pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        val (x, y) = dragAmount.x.toInt() to dragAmount.y.toInt()
-                        val params = flyScope.params
-                        params.x += x
-                        params.y += y
-                        flyScope.params = params
-
-                    }
-                }) {
-                    flyScope.content()
-                }
+                flyScope.content()
             }
         )
         this.flyView = flyView
