@@ -44,15 +44,20 @@ Then you can call show method to launch the service, for example:
 Be sure that there is a defined FlyViewInfo object  that is associated to the passed key.
 ## Docs
 ### FlyViewInfo
-[optional] params: WindowManager.LayoutPramas which is set to a default value.<br>
-[optional] keyDispatcher: pass a lambda that handles a ```KeyEvent?``` to handle navigation key from your fly view.<br>
-[mandatory] content: a composable function where you define your view content.<br>
+  A holder to all information needed for the ```FlyView```<br>
+   @property ```controller``` used to send bundles from anywhere to the ```FlyView```<br>
+   @property ```params``` a ```WindowManager.LayoutParams``` that passed when adding the ```FlyView```<br>
+   @property ```keyDispatcher``` this will be passed to the [FlyView] to handle key events<br>
+   @property ```content``` the content of the flyView<br>
+   @property ```flyView``` the ```android.view.View``` object that will be added to the ```WindowManager```<br>
 ### FlyViewScope
-this is the scope of your view content which provides you:
-```removeView()``` which remove the view from the WindowManager.<br>
-```params``` to access and modify the view layout params.<br>
+This class provides view property to the Composable content<br>
+   @param ```params``` pass the initial ```WindowManager.LayoutParams``` object to enable updating layout params inside the composable view<br>
+   @property ```removeView``` call this in your composable function to remove it from the ```WindowManager```<br>
+   @property ```updateLayoutParams``` this function will be called when you assign a new object to ```params```<br>
 ### FlyViewService
-has a static ```show``` method to show a specific view as the previous example.<br>
-a map<String,()->FlyViewInfo> to create your ```FlyViewInfo``` provider then the service will use it to add the view to the ```WindowManager``` 
-
+has a static ```show``` method to show a ```FlyViewInfo``` that you added to the ```infoProviders```<br>
+   @param ```context``` a context to start the service<br>
+   @param ```key``` the key you used to add your ```FlyViewInfo``` to the ```infoProviders```<br>
+   @param ```bundle``` an optional bundle that will be passed to your controller ```FlyController.update``` method<br>
 
