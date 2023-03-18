@@ -44,6 +44,9 @@ fun <T : FlyController> WindowManager.addFlyInfo(
                     delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
                     runRecomposeScope.cancel()
                     this@addFlyInfo.removeFlyView(key)
+                    context.startService(Intent(context, FlyViewService::class.java).also {
+                        it.putExtra("size", showedViews.size)
+                    })
                 }
             },
             updateLayoutParams = {

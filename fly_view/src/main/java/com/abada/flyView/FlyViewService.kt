@@ -31,12 +31,19 @@ class FlyViewService : Service() {
 
         val notification: Notification = NotificationCompat.Builder(this, ID)
             .build()
-        val key = intent!!.getStringExtra("key")!!
 
-        startForeground(1, notification)
-        showView(key)
-        intent.extras?.let {
-            updateFlyView(key, it)
+        val size = intent!!.getIntExtra("size", -1)
+        if (size == 0) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+        else {
+            val key = intent.getStringExtra("key")!!
+            startForeground(1, notification)
+            showView(key)
+            intent.extras?.let {
+                updateFlyView(key, it)
+            }
         }
         return START_STICKY_COMPATIBILITY
     }
@@ -58,7 +65,7 @@ class FlyViewService : Service() {
 
     companion object {
         /**
-         * add here your [FlyViewInfo] to enable the service to show it when your call [show] or [update] methods
+         * add here your [FlyViewInfo] to enable the service to show it when your call [show] methods
          */
         val infoProviders = mutableMapOf<String, () -> FlyViewInfo<in FlyController>>()
 
