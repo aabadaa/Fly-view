@@ -20,31 +20,24 @@ import com.abada.flyView.FlyViewService.Companion.show
 class FlyViewService : Service() {
     private lateinit var wm: WindowManager
     private val ID = "flyViewService"
+    var numberOfShowedViews = 0
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val channel = NotificationChannel(
-            ID, ID,
-            NotificationManager.IMPORTANCE_LOW
+            ID, ID, NotificationManager.IMPORTANCE_LOW
         )
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
 
-        val notification: Notification = NotificationCompat.Builder(this, ID)
-            .build()
+        val notification: Notification = NotificationCompat.Builder(this, ID).build()
+        val key = intent!!.getStringExtra("key")!!
+        startForeground(1, notification)
+        showView(key)
+        intent.extras?.let {
+            updateFlyView(key, it)
+        }
+        numberOfShowedViews++
 
-        val size = intent!!.getIntExtra("size", -1)
-        if (size == 0) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        }
-        else {
-            val key = intent.getStringExtra("key")!!
-            startForeground(1, notification)
-            showView(key)
-            intent.extras?.let {
-                updateFlyView(key, it)
-            }
-        }
         return START_STICKY_COMPATIBILITY
     }
 
@@ -57,7 +50,13 @@ class FlyViewService : Service() {
         key: String
     ) {
         (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
-            wm.addFlyInfo(this@FlyViewService, key, this)
+            wm.addFlyInfo(this@FlyViewService, key, onRemove = {
+                numberOfShowedViews--
+                if (numberOfShowedViews == 0) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
+            }, this)
         }
     }
 
