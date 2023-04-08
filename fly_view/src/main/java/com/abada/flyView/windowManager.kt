@@ -66,10 +66,11 @@ fun <T : FlyController> WindowManager.addFlyInfo(
 }
 
 fun WindowManager.removeFlyView(key: String) {
-    val flyViewInfo = showedViews.remove(key)!!
-    flyViewInfo.flyView.run {
-        removeView(rootView)
-        this@removeFlyView.removeView(this)
+    showedViews.remove(key)?.let {
+        it.flyView.run {
+            removeView(rootView)
+            this@removeFlyView.removeView(this)
+        }
     }
 }
 

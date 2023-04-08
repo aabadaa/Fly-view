@@ -6,6 +6,9 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.OnBackPressedDispatcherOwner
+import androidx.activity.setViewTreeOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Recomposer
 import androidx.compose.ui.platform.AbstractComposeView
@@ -27,18 +30,30 @@ internal class FlyView constructor(
     private val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
     private val content: @Composable () -> Unit,
 ) : AbstractComposeView(context, null, 0) {
+    private val savedStateRegisterOwner = CustomSavedStateRegistryOwner()
+    private val onBackPressedDispatcherOwner = object : OnBackPressedDispatcherOwner {
+        override val onBackPressedDispatcher = OnBackPressedDispatcher()
+
+        override val lifecycle: Lifecycle
+            get() = savedStateRegisterOwner.lifecycle
+
+
+    }
+    override var shouldCreateCompositionOnAttachedToWindow: Boolean = true
 
     init {
-        val lifecycleOwner = LifeCycle().also {
+        val lifecycleOwner = savedStateRegisterOwner.also {
             it.performRestore(null)
             it.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-            //setViewTreeLifecycleOwner(it)
-            ViewTreeLifecycleOwner.set(this, it)
         }
-
-        setViewTreeSavedStateRegistryOwner(lifecycleOwner)
         val viewModelStore = ViewModelStore()
-        ViewTreeViewModelStoreOwner.set(this) { viewModelStore }
+        setViewTreeLifecycleOwner(lifecycleOwner)
+        setViewTreeOnBackPressedDispatcherOwner(onBackPressedDispatcherOwner)
+        setViewTreeSavedStateRegistryOwner(lifecycleOwner)
+        setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
+            override val viewModelStore: ViewModelStore
+                get() = viewModelStore
+        })
         val recompose = Recomposer(AndroidUiDispatcher.CurrentThread)
         compositionContext = recompose
         runRecomposeScope.launch {
@@ -52,11 +67,12 @@ internal class FlyView constructor(
         if (isAttachedToWindow) {
             Log.i(ContentValues.TAG, "flyContent: showed")
             createComposition()
+            (savedStateRegisterOwner.lifecycle as LifecycleRegistry).currentState = Lifecycle.State.RESUMED
         }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-
+        onBackPressedDispatcherOwner.onBackPressedDispatcher.onBackPressed()
         return keyDispatcher?.invoke(event) ?: super.dispatchKeyEvent(event)
     }
 
@@ -64,7 +80,7 @@ internal class FlyView constructor(
 }
 
 
-private class LifeCycle : SavedStateRegistryOwner {
+private class CustomSavedStateRegistryOwner : SavedStateRegistryOwner {
 
     private var mLifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     private var mSavedStateRegistryController: SavedStateRegistryController =
@@ -73,8 +89,7 @@ private class LifeCycle : SavedStateRegistryOwner {
     override val savedStateRegistry: SavedStateRegistry
         get() = mSavedStateRegistryController.savedStateRegistry
 
-    override fun getLifecycle(): Lifecycle = mLifecycleRegistry
-
+    override val lifecycle: Lifecycle = mLifecycleRegistry
     fun handleLifecycleEvent(event: Lifecycle.Event) {
         mLifecycleRegistry.handleLifecycleEvent(event)
     }

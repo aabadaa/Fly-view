@@ -1,7 +1,10 @@
 package com.abada.flyview
 
+import android.content.ContentValues
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -25,6 +28,10 @@ fun Context.createFlyView() {
         val controller = ExampleController()
         FlyViewInfo(controller = controller) {
             DraggableFlyView {
+                BackHandler(true) {
+                    Log.i(ContentValues.TAG, "createFlyView: backHandler")
+                    removeView()
+                }
                 Column {
                     Text(text = "test ${controller.x}")
                     Button(onClick = removeView) {
