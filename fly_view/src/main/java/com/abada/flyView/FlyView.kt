@@ -46,9 +46,14 @@ internal class FlyView constructor(
             it.performRestore(null)
             it.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         }
+        val viewModelStore = ViewModelStore()
         setViewTreeLifecycleOwner(lifecycleOwner)
         setViewTreeOnBackPressedDispatcherOwner(onBackPressedDispatcherOwner)
         setViewTreeSavedStateRegistryOwner(lifecycleOwner)
+        setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
+            override val viewModelStore: ViewModelStore
+                get() = viewModelStore
+        })
         val recompose = Recomposer(AndroidUiDispatcher.CurrentThread)
         compositionContext = recompose
         runRecomposeScope.launch {
