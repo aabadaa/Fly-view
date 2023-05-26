@@ -10,6 +10,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
@@ -27,7 +28,8 @@ fun Context.createFlyView() {
     FlyViewService.infoProviders["test"] = {
         val controller = ExampleController()
         FlyViewInfo(controller = controller) {
-            DraggableFlyView {
+            var auto by remember{ mutableStateOf(false) }
+            DraggableFlyView (autoGoToBorder = auto){
                 BackHandler(true) {
                     Log.i(ContentValues.TAG, "createFlyView: backHandler")
                     removeView()
@@ -41,6 +43,9 @@ fun Context.createFlyView() {
                         controller.x++
                     }) {
                         Text("x++")
+                    }
+                    Button(onClick = { auto = auto.not()}) {
+                        Text(text = auto.toString())
                     }
                 }
             }
