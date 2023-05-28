@@ -88,7 +88,9 @@ fun WindowManager.removeFlyView(key: String) {
 
         }
     }
-    if (showedViews.size == 1) showedViews.clear()
+    if (showedViews.size == 1) {
+        removeFlyView("close")
+    }
 }
 
 private fun WindowManager.hideCloseView() {
