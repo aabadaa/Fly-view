@@ -55,7 +55,10 @@ fun FlyViewScope.goToBorder() {
 
             override fun set(params: WindowManager.LayoutParams, value: Int) {
                 params.x = value
-                this@goToBorder.params = params
+                try {
+                    this@goToBorder.params = params
+                }catch (_:Exception){}
+
             }
         }
     ObjectAnimator.ofInt(
