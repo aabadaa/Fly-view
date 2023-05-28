@@ -1,9 +1,17 @@
 package com.abada.flyView
 
+import android.content.Context
 import android.graphics.PixelFormat
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.AndroidUiDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 /**
  * A holder to all information needed for the [FlyView]
  *  @property controller used to send bundles from anywhere to the [FlyView]
@@ -25,5 +33,38 @@ data class FlyViewInfo<T : FlyController>(
     internal val content: @Composable FlyViewScope.() -> Unit,
 ) {
     internal lateinit var flyView: FlyView
+
+    fun addToWindowManager(
+        context: Context,
+        key: String,
+        windowManager: WindowManager, onRemove: () -> Unit = {},
+        onUpdateParams: (WindowManager.LayoutParams) -> Unit = {},
+    ) {
+        val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
+        val flyScope = FlyViewScope(
+            params = params, removeView = {
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
+                    runRecomposeScope.cancel()
+                    windowManager.removeFlyView(key)
+                    onRemove()
+                }
+            },
+            updateLayoutParams = {
+                windowManager.updateViewLayout(flyView, it)
+                onUpdateParams(it)
+            }
+        )
+        val flyView = FlyView(
+            context = context,
+            runRecomposeScope = runRecomposeScope,
+            keyDispatcher = keyDispatcher,
+            content = {
+                flyScope.content()
+            }
+        )
+        this.flyView = flyView
+       windowManager. addView(flyView, params)
+    }
 }
 

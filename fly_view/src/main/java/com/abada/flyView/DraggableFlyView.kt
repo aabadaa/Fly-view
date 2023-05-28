@@ -28,6 +28,7 @@ fun FlyViewScope.DraggableFlyView(
 ) = Box(
     modifier = Modifier.pointerInput(autoGoToBorder,duration) {
         detectDragGestures(onDragEnd = {
+            removeOnIconTouch()
             if (autoGoToBorder)goToBorder()
         }) { change, dragAmount ->
             change.consume()
@@ -64,4 +65,9 @@ fun FlyViewScope.goToBorder() {
         start()
     }
     this.params = params
+}
+
+fun FlyViewScope.removeOnIconTouch(){
+    if (params.y > Resources.getSystem().displayMetrics.heightPixels / 6)
+        removeView()
 }
