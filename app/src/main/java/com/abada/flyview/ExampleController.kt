@@ -55,5 +55,7 @@ fun Context.createFlyView() {
 }
 
 fun updateFlyView(value: Int) {
-    com.abada.flyView.updateFlyView("test", Bundle().also { it.putInt("exampleInt", value) })
+    com.abada.flyView.windowManagerUtils.updateFlyView(
+        "test",
+        Bundle().also { it.putInt("exampleInt", value) })
 }

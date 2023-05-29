@@ -11,6 +11,8 @@ import android.os.IBinder
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.abada.flyView.FlyViewService.Companion.show
+import com.abada.flyView.windowManagerUtils.addFlyInfo
+import com.abada.flyView.windowManagerUtils.updateFlyView
 
 /**
  *

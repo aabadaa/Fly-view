@@ -1,4 +1,4 @@
-package com.abada.flyView
+package com.abada.flyView.windowManagerUtils
 
 import android.content.Context
 import android.content.Intent
@@ -15,17 +15,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.abada.flyView.FlyController
+import com.abada.flyView.FlyViewInfo
+import com.abada.flyView.NoController
 
-private val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
 /**
  * define a FlyViewInfo and call this method to add it to the WindowManager
  *
  * @param context any context to create a [android.view.View] object
- * @param key a string to identify your view when you want to update it using [updateFlyView] method
+ * @param key a string to identify your view , it is used when you want to update it using [updateFlyView] method or remove it using [removeFlyView]
  * @param flyViewInfo the info of your fly view that holds your view and your controller
  */
 fun <T : FlyController> WindowManager.addFlyInfo(
@@ -53,18 +56,7 @@ fun <T : FlyController> WindowManager.addFlyInfo(
             it.width = 0
             it.height = 0
         }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(.3f)
-                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Gray)))
-            ) {
-                Icon(
-                    modifier = Modifier.align(Alignment.Center),
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete"
-                )
-            }
+            closeViewContent()
         }
         showedViews["close"] = closeView
         closeView.addToWindowManager(context, "close", this, {}, {})
@@ -79,6 +71,12 @@ fun <T : FlyController> WindowManager.addFlyInfo(
     }
 }
 
+
+/**
+ * call this method to remove views those are added by ``addFlyInfo``
+ *
+ * @param key the identifier of your fly view
+ */
 fun WindowManager.removeFlyView(key: String) {
     showedViews.remove(key)?.let {
         hideCloseView()
@@ -93,22 +91,31 @@ fun WindowManager.removeFlyView(key: String) {
     }
 }
 
-private fun WindowManager.hideCloseView() {
-    showedViews["close"]?.let { closeView ->
-        closeView.params.width = 0
-        closeView.params.height = 0
-        updateViewLayout(closeView.flyView, closeView.params)
-    }
-}
 
-private fun WindowManager.showCloseView() {
-    showedViews["close"]?.let { closeView ->
-        closeView.params.width = WindowManager.LayoutParams.MATCH_PARENT
-        closeView.params.height = Resources.getSystem().displayMetrics.heightPixels / 6
-        updateViewLayout(closeView.flyView, closeView.params)
-    }
-}
-
+/**
+ * call this method to pass data to your showed fly views by passing it in a bundle object
+ *
+ * @param key the identifier of your fly view
+ */
 fun updateFlyView(key: String, bundle: Bundle): Boolean =
     showedViews[key]?.controller?.update(bundle) == Unit
 
+/**
+ * this view is showed when the user drag the [com.abada.flyView.FlyView] to the bottom of the screen to remove it.
+ *
+ * assign your new content to fit your app style
+ */
+var closeViewContent: @Composable () -> Unit = {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(.3f)
+            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Gray)))
+    ) {
+        Icon(
+            modifier = Modifier.align(Alignment.Center),
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete"
+        )
+    }
+}
