@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import com.abada.flyView.windowManagerUtils.removeFlyView
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -20,6 +21,8 @@ import kotlinx.coroutines.launch
  *  @property keyDispatcher this will be passed to the [FlyView] to handle key events
  *  @property content the content of the flyView
  *  @property flyView the [android.view.View] object that will be added to the [WindowManager]
+ *  @property removeView call it in your view to remove it
+ *  @property params pass your lambda that updates the view's layout params to update it
  */
 data class FlyViewInfo<T : FlyController>(
     val controller: T,
@@ -38,7 +41,7 @@ data class FlyViewInfo<T : FlyController>(
     private lateinit var updateLayoutParams: (WindowManager.LayoutParams) -> Unit
     lateinit var removeView: () -> Unit
 
-    fun addToWindowManager(
+    internal fun addToWindowManager(
         context: Context,
         key: String,
         windowManager: WindowManager,
@@ -50,7 +53,7 @@ data class FlyViewInfo<T : FlyController>(
             onUpdateParams(it)
         }
         removeView = {
-            runRecomposeScope.launch {
+            CoroutineScope(Job()). launch {
                 params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 windowManager.updateViewLayout(flyView, params)
                 onUpdateParams(params)
