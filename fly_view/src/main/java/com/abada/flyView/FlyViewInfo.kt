@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 data class FlyViewInfo<T : FlyController>(
     val controller: T,
-    val onRemove: () -> Unit = {},
+    val onRemove: suspend () -> Unit = {},
     internal val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -46,6 +46,9 @@ data class FlyViewInfo<T : FlyController>(
         val flyScope = FlyViewScope(
             params = params, removeView = {
                 runRecomposeScope.launch {
+                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    windowManager.updateViewLayout(flyView, params)
+                    onUpdateParams(params)
                     onRemove()
                     delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
                     runRecomposeScope.cancel()

@@ -19,6 +19,7 @@ import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.FlyViewService
+import kotlinx.coroutines.delay
 
 class ExampleController : FlyController {
     var x by mutableStateOf(0)
@@ -32,6 +33,7 @@ fun Context.createFlyView() {
         val controller = ExampleController()
         FlyViewInfo(controller = controller, onRemove = {
             controller.x = 10
+            delay(1000)
         }) {
             var auto by remember { mutableStateOf(false) }
             DraggableFlyView (autoGoToBorder = auto){
