@@ -9,9 +9,11 @@ import android.view.WindowManager
  */
 class FlyViewScope(
     params: WindowManager.LayoutParams,
-    val removeView: () -> Unit,
+
     private val updateLayoutParams: (WindowManager.LayoutParams) -> Unit,
 ) {
+    var removeView: () -> Unit = { }
+        internal set
     var params: WindowManager.LayoutParams = params
         set(value) {
             updateLayoutParams(value)

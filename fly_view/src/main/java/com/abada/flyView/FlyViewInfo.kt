@@ -23,8 +23,8 @@ import kotlinx.coroutines.launch
  */
 data class FlyViewInfo<T : FlyController>(
     val controller: T,
-    val onRemove: suspend () -> Unit = {},
-    internal val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
+    val onRemove: suspend FlyViewInfo<T>.() -> Unit = {},
+    private var params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -32,9 +32,11 @@ data class FlyViewInfo<T : FlyController>(
         PixelFormat.TRANSLUCENT
     ).also { it.windowAnimations = android.R.style.Animation },
     internal val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
-    internal val content: @Composable FlyViewScope.() -> Unit,
+    internal val content: @Composable FlyViewInfo<T>.() -> Unit,
 ) {
     internal lateinit var flyView: FlyView
+    private lateinit var updateLayoutParams: (WindowManager.LayoutParams) -> Unit
+    lateinit var removeView: () -> Unit
 
     fun addToWindowManager(
         context: Context,
@@ -43,33 +45,35 @@ data class FlyViewInfo<T : FlyController>(
         onUpdateParams: (WindowManager.LayoutParams) -> Unit = {},
     ) {
         val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
-        val flyScope = FlyViewScope(
-            params = params, removeView = {
-                runRecomposeScope.launch {
-                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                    windowManager.updateViewLayout(flyView, params)
-                    onUpdateParams(params)
-                    onRemove()
-                    delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
-                    runRecomposeScope.cancel()
-                    windowManager.removeFlyView(key)
-                }
-            },
-            updateLayoutParams = {
-                windowManager.updateViewLayout(flyView, it)
-                onUpdateParams(it)
+        updateLayoutParams = {
+            windowManager.updateViewLayout(flyView, it)
+            onUpdateParams(it)
+        }
+        removeView = {
+            runRecomposeScope.launch {
+                params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                windowManager.updateViewLayout(flyView, params)
+                onUpdateParams(params)
+                onRemove(this@FlyViewInfo)
+                delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
+                runRecomposeScope.cancel()
+                windowManager.removeFlyView(key)
             }
-        )
-        val flyView = FlyView(
+        }
+        flyView = FlyView(
             context = context,
             runRecomposeScope = runRecomposeScope,
             keyDispatcher = keyDispatcher,
             content = {
-                flyScope.content()
+                content()
             }
         )
-        this.flyView = flyView
-       windowManager. addView(flyView, params)
+        windowManager.addView(flyView, params)
+    }
+
+    fun params(edit: (WindowManager.LayoutParams) -> WindowManager.LayoutParams) {
+        params = edit(params)
+        updateLayoutParams(params)
     }
 }
 
