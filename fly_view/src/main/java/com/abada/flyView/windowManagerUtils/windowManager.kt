@@ -34,7 +34,6 @@ import com.abada.flyView.NoController
 fun <T : FlyController> WindowManager.addFlyInfo(
     context: Context,
     key: String,
-    onRemove: () -> Unit = {},
     flyViewInfo: FlyViewInfo<T>
 ) {
     if (!Settings.canDrawOverlays(context)) context.startActivity(Intent(
@@ -59,10 +58,10 @@ fun <T : FlyController> WindowManager.addFlyInfo(
             closeViewContent()
         }
         showedViews["close"] = closeView
-        closeView.addToWindowManager(context, "close", this, {}, {})
+        closeView.addToWindowManager(context, "close", this,) {}
     }
     showedViews[key] = flyViewInfo
-    flyViewInfo.addToWindowManager(context, key, this, onRemove) {
+    flyViewInfo.addToWindowManager(context, key, this) {
         if (it.y > Resources.getSystem().displayMetrics.heightPixels / 6) {
             showCloseView()
         } else {

@@ -52,13 +52,14 @@ class FlyViewService : Service() {
         key: String
     ) {
         (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
-            wm.addFlyInfo(this@FlyViewService, key, onRemove = {
+            wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
+                this.onRemove()
                 numberOfShowedViews--
                 if (numberOfShowedViews == 0) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }
-            }, this)
+            }))
         }
     }
 

@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -12,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
@@ -27,14 +30,16 @@ class ExampleController : FlyController {
 fun Context.createFlyView() {
     FlyViewService.infoProviders["test"] = {
         val controller = ExampleController()
-        FlyViewInfo(controller = controller) {
-            var auto by remember{ mutableStateOf(false) }
+        FlyViewInfo(controller = controller, onRemove = {
+            controller.x = 10
+        }) {
+            var auto by remember { mutableStateOf(false) }
             DraggableFlyView (autoGoToBorder = auto){
                 BackHandler(true) {
                     Log.i(ContentValues.TAG, "createFlyView: backHandler")
                     removeView()
                 }
-                Column {
+                Column(modifier = Modifier.background(Color.White)) {
                     Text(text = "test ${controller.x}")
                     Button(onClick = removeView) {
                         Text("Close")
@@ -44,7 +49,7 @@ fun Context.createFlyView() {
                     }) {
                         Text("x++")
                     }
-                    Button(onClick = { auto = auto.not()}) {
+                    Button(onClick = { auto = auto.not() }) {
                         Text(text = auto.toString())
                     }
                 }

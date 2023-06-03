@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import com.abada.flyView.windowManagerUtils.removeFlyView
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -16,6 +15,7 @@ import kotlinx.coroutines.launch
 /**
  * A holder to all information needed for the [FlyView]
  *  @property controller used to send bundles from anywhere to the [FlyView]
+ *  @property onRemove pass a lambda which will be called before removing the [FlyView]
  *  @property params a [WindowManager.LayoutParams] that passed when adding the [FlyView]
  *  @property keyDispatcher this will be passed to the [FlyView] to handle key events
  *  @property content the content of the flyView
@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
  */
 data class FlyViewInfo<T : FlyController>(
     val controller: T,
+    val onRemove: () -> Unit = {},
     internal val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -38,17 +39,17 @@ data class FlyViewInfo<T : FlyController>(
     fun addToWindowManager(
         context: Context,
         key: String,
-        windowManager: WindowManager, onRemove: () -> Unit = {},
+        windowManager: WindowManager,
         onUpdateParams: (WindowManager.LayoutParams) -> Unit = {},
     ) {
         val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
         val flyScope = FlyViewScope(
             params = params, removeView = {
-                CoroutineScope(Dispatchers.Main).launch {
+                runRecomposeScope.launch {
+                    onRemove()
                     delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
                     runRecomposeScope.cancel()
                     windowManager.removeFlyView(key)
-                    onRemove()
                 }
             },
             updateLayoutParams = {
