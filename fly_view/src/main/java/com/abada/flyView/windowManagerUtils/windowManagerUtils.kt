@@ -7,18 +7,22 @@ import com.abada.flyView.FlyViewInfo
 
 internal val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
 
-internal fun WindowManager.hideCloseView() {
+internal fun hideCloseView() {
     showedViews["close"]?.let { closeView ->
-        closeView.params.width = 0
-        closeView.params.height = 0
-        updateViewLayout(closeView.flyView, closeView.params)
+        closeView.params {
+           it.width = 0
+           it.height = 0
+           it
+        }
     }
 }
 
-internal fun WindowManager.showCloseView() {
+internal fun showCloseView() {
     showedViews["close"]?.let { closeView ->
-        closeView.params.width = WindowManager.LayoutParams.MATCH_PARENT
-        closeView.params.height = Resources.getSystem().displayMetrics.heightPixels / 6
-        updateViewLayout(closeView.flyView, closeView.params)
+        closeView.params{
+            it.width = WindowManager.LayoutParams.MATCH_PARENT
+            it.height = Resources.getSystem().displayMetrics.heightPixels / 6
+            it
+        }
     }
 }

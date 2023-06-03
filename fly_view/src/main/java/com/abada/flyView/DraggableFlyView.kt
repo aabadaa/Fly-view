@@ -21,23 +21,24 @@ import androidx.compose.ui.input.pointer.pointerInput
  * @param content the content of the draggable flyView
  */
 @Composable
-fun FlyViewScope.DraggableFlyView(
+fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
     autoGoToBorder: Boolean = true,
     duration: Long = 300,
     content: @Composable () -> Unit
 ) = Box(
-    modifier = Modifier.pointerInput(autoGoToBorder,duration) {
+    modifier = Modifier.pointerInput(autoGoToBorder, duration) {
         detectDragGestures(onDragEnd = {
             removeOnIconTouch()
-            if (autoGoToBorder)goToBorder()
+            if (autoGoToBorder) goToBorder()
         }) { change, dragAmount ->
             change.consume()
             val (x, y) = dragAmount.x.toInt() to dragAmount.y.toInt()
-            val params = params
-            params.x += x
-            params.y += y
-            this@DraggableFlyView.params = params
-            Log.i(TAG, "DraggableFlyView: ${params.x}")
+            params {
+                it.x += x
+                it.y += y
+                Log.i(TAG, "DraggableFlyView: ${it.x}")
+                it
+            }
         }
     },
 ) {
@@ -45,32 +46,36 @@ fun FlyViewScope.DraggableFlyView(
     content()
 }
 
-fun FlyViewScope.goToBorder() {
+fun <T : FlyController> FlyViewInfo<T>.goToBorder() {
     val screenWidth = Resources.getSystem().displayMetrics.widthPixels
-    val xProperty =
-        object : Property<WindowManager.LayoutParams, Int>(Int::class.java, "x") {
-            override fun get(params: WindowManager.LayoutParams): Int {
-                return params.x
-            }
+    val xProperty = object : Property<WindowManager.LayoutParams, Int>(Int::class.java, "x") {
+        override fun get(params: WindowManager.LayoutParams): Int {
+            return params.x
+        }
 
-            override fun set(params: WindowManager.LayoutParams, value: Int) {
-                params.x = value
-                try {
-                    this@goToBorder.params = params
-                }catch (_:Exception){}
-
+        override fun set(params: WindowManager.LayoutParams, value: Int) {
+            params.x = value
+            try {
+                params { params }
+            } catch (_: Exception) {
             }
         }
-    ObjectAnimator.ofInt(
-        params, xProperty, if (params.x < 0) -screenWidth / 2 else screenWidth / 2
-    ).apply {
-        this.duration = duration
-        start()
     }
-    this.params = params
+    params {
+        ObjectAnimator.ofInt(
+            it, xProperty, if (it.x < 0) -screenWidth / 2 else screenWidth / 2
+        ).apply {
+            this.duration = duration
+            start()
+        }
+        it
+    }
 }
 
-fun FlyViewScope.removeOnIconTouch(){
-    if (params.y > Resources.getSystem().displayMetrics.heightPixels / 6)
-        removeView()
+fun <T : FlyController> FlyViewInfo<T>.removeOnIconTouch() {
+    params{
+        if (it.y > Resources.getSystem().displayMetrics.heightPixels / 6)
+            removeView()
+        it
+    }
 }
