@@ -28,8 +28,8 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
 ) = Box(
     modifier = Modifier.pointerInput(autoGoToBorder, duration) {
         detectDragGestures(onDragEnd = {
-            removeOnIconTouch()
-            if (autoGoToBorder) goToBorder()
+            if (!removeOnIconTouch() && autoGoToBorder)
+                goToBorder()
         }) { change, dragAmount ->
             change.consume()
             val (x, y) = dragAmount.x.toInt() to dragAmount.y.toInt()
@@ -46,7 +46,7 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
     content()
 }
 
-fun <T : FlyController> FlyViewInfo<T>.goToBorder() {
+private fun <T : FlyController> FlyViewInfo<T>.goToBorder() {
     val screenWidth = Resources.getSystem().displayMetrics.widthPixels
     val xProperty = object : Property<WindowManager.LayoutParams, Int>(Int::class.java, "x") {
         override fun get(params: WindowManager.LayoutParams): Int {
@@ -72,10 +72,14 @@ fun <T : FlyController> FlyViewInfo<T>.goToBorder() {
     }
 }
 
-fun <T : FlyController> FlyViewInfo<T>.removeOnIconTouch() {
-    params{
-        if (it.y > Resources.getSystem().displayMetrics.heightPixels / 6)
+private fun <T : FlyController> FlyViewInfo<T>.removeOnIconTouch(): Boolean {
+    var out = false
+    params {
+        if (it.y > Resources.getSystem().displayMetrics.heightPixels / 6) {
             removeView()
+            out = true
+        }
         it
     }
+    return out
 }

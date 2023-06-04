@@ -11,7 +11,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,6 +22,8 @@ import kotlinx.coroutines.delay
 
 class ExampleController : FlyController {
     var x by mutableStateOf(0)
+    var auto by mutableStateOf(false)
+
     override fun update(data: Bundle) {
         x = data.getInt("exampleInt")
     }
@@ -33,10 +34,10 @@ fun Context.createFlyView() {
         val controller = ExampleController()
         FlyViewInfo(controller = controller, onRemove = {
             controller.x = 10
+            controller.auto = false
             delay(1000)
         }) {
-            var auto by remember { mutableStateOf(false) }
-            DraggableFlyView (autoGoToBorder = auto){
+            DraggableFlyView(autoGoToBorder = controller.auto) {
                 BackHandler(true) {
                     Log.i(ContentValues.TAG, "createFlyView: backHandler")
                     removeView()
@@ -51,8 +52,8 @@ fun Context.createFlyView() {
                     }) {
                         Text("x++")
                     }
-                    Button(onClick = { auto = auto.not() }) {
-                        Text(text = auto.toString())
+                    Button(onClick = { controller.auto = controller.auto.not() }) {
+                        Text(text = controller.auto.toString())
                     }
                 }
             }
