@@ -69,7 +69,7 @@ class FlyViewService : Service() {
         /**
          * add here your [FlyViewInfo] to enable the service to show it when your call [show] methods
          */
-        val infoProviders = mutableMapOf<String, () -> FlyViewInfo<in FlyController>>()
+        val infoProviders = mutableMapOf<String, () -> FlyViewInfo<out FlyController>>()
 
         /**
          * call this method to show a [FlyViewInfo] that you added to the [infoProviders]
