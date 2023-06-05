@@ -8,7 +8,7 @@ this library enables you to add a composable view to the window manager easily u
 			maven { url 'https://jitpack.io' }
 		}
 	}
-### Step 2 Add the dependency, get the last version from [here](https://jitpack.io/#aabadaa/FLyView)
+### Step 2 Add the dependency, get the last version from [![](https://jitpack.io/v/aabadaa/FLyView.svg)](https://jitpack.io/#aabadaa/FLyView)
 	dependencies {
 	        implementation 'com.github.aabadaa:FLyView:<version>'
 	}
@@ -16,25 +16,33 @@ this library enables you to add a composable view to the window manager easily u
 ## Usage
 At first you need to define a ```FlyViewInfo``` like this:
 ```kotlin
-    FlyViewService.infoProviders["example"] = {
-    FlyViewInfo(NoController) { // you are in the FlyViewScope
-        DraggableFlyView {
-		Column {
-		    Text(text = "example")
-		    // removeView is a method provided by the FlyViewScope
-		    Button(onClick = removeView) {
-			Text("Close")
-		    }
-		    Button(onClick = {
-		     // params is a variable that enable you to modify your layout params in the windowManager
-		     // this is also provided by the FlyViewScope
-			params = WindowManager.LayoutParams()
-		    }) {
-			Text("update params")
-		       }
-		    }
-		}
-	  }
+        val controller = ExampleController()
+        FlyViewInfo(controller = controller, onRemove = {
+            controller.x = 10
+            controller.auto = false
+            delay(1000)
+        }) {
+            DraggableFlyView(autoGoToBorder = controller.auto) {
+                BackHandler(true) {
+                    Log.i(ContentValues.TAG, "createFlyView: backHandler")
+                    removeView()
+                }
+                Column(modifier = Modifier.background(Color.White)) {
+                    Text(text = "test ${controller.x}")
+                    Button(onClick = removeView) {
+                        Text("Close")
+                    }
+                    Button(onClick = {
+                        controller.x++
+                    }) {
+                        Text("x++")
+                    }
+                    Button(onClick = { controller.auto = controller.auto.not() }) {
+                        Text(text = controller.auto.toString())
+                    }
+                }
+            }
+        }
     }
 ```
 Then you can call show method to launch the service, for example:
@@ -44,17 +52,15 @@ Then you can call show method to launch the service, for example:
 Be sure that there is a defined FlyViewInfo object  that is associated to the passed key.
 ## Docs
 ### FlyViewInfo
-  A holder to all information needed for the ```FlyView```<br>
-   @property ```controller``` used to send bundles from anywhere to the ```FlyView```<br>
-   @property ```params``` a ```WindowManager.LayoutParams``` that passed when adding the ```FlyView```<br>
-   @property ```keyDispatcher``` this will be passed to the [FlyView] to handle key events<br>
-   @property ```content``` the content of the flyView<br>
-   @property ```flyView``` the ```android.view.View``` object that will be added to the ```WindowManager```<br>
-### FlyViewScope
-This class provides view property to the Composable content<br>
-   @param ```params``` pass the initial ```WindowManager.LayoutParams``` object to enable updating layout params inside the composable view<br>
-   @property ```removeView``` call this in your composable function to remove it from the ```WindowManager```<br>
-   @property ```updateLayoutParams``` this function will be called when you assign a new object to ```params```<br>
+A holder to all information needed for the ```FlyView```<br>
+   @property controller used to send bundles from anywhere to the ```FlyView```<br>
+   @property onRemove pass a lambda which will be called before removing the ```FlyView```<br>
+   @property params a ```WindowManager.LayoutParams``` that passed when adding the ```FlyView```<br>
+   @property keyDispatcher this will be passed to the ```FlyView``` to handle key events<br>
+   @property content the content of the flyView<br>
+   @property flyView the ```android.view.View``` object that will be added to the ```WindowManager```<br>
+   @property removeView call it in your view to remove it<br>
+   @property params pass your lambda that updates the view's layout params to update it<br>
 ### FlyViewService
 has a static ```show``` method to show a ```FlyViewInfo``` that you added to the ```infoProviders```<br>
    @param ```context``` a context to start the service<br>
