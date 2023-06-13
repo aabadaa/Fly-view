@@ -49,7 +49,8 @@ Then you can call show method to launch the service, for example:
   ```kotlin
   FlyViewService.show(context, "example")
   ````
-Be sure that there is a defined FlyViewInfo object  that is associated to the passed key.
+Be sure that there is a defined FlyViewInfo object  that is associated to the passed key.<br>
+Check the full example [here](https://github.com/aabadaa/FLyView/blob/master/app/src/main/java/com/abada/flyview/ExampleController.kt)
 ## Docs
 ### FlyViewInfo
 A holder to all information needed for the ```FlyView```<br>
