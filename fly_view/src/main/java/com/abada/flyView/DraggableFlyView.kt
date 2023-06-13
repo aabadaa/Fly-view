@@ -1,17 +1,13 @@
 package com.abada.flyView
 
-import android.animation.ObjectAnimator
-import android.content.ContentValues.TAG
 import android.content.res.Resources
-import android.util.Log
-import android.util.Property
-import android.view.WindowManager
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import com.abada.flyView.windowManagerUtils.animateTo
 
 /**
  *
@@ -33,12 +29,9 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
         }) { change, dragAmount ->
             change.consume()
             val (x, y) = dragAmount.x.toInt() to dragAmount.y.toInt()
-            params {
-                it.x += x
-                it.y += y
-                Log.i(TAG, "DraggableFlyView: ${it.x}")
-                it
-            }
+            params.x += x
+            params.y += y
+            updateLayoutParams()
         }
     },
 ) {
@@ -48,38 +41,18 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
 
 private fun <T : FlyController> FlyViewInfo<T>.goToBorder() {
     val screenWidth = Resources.getSystem().displayMetrics.widthPixels
-    val xProperty = object : Property<WindowManager.LayoutParams, Int>(Int::class.java, "x") {
-        override fun get(params: WindowManager.LayoutParams): Int {
-            return params.x
-        }
-
-        override fun set(params: WindowManager.LayoutParams, value: Int) {
-            params.x = value
-            try {
-                params { params }
-            } catch (_: Exception) {
-            }
-        }
-    }
-    params {
-        ObjectAnimator.ofInt(
-            it, xProperty, if (it.x < 0) -screenWidth / 2 else screenWidth / 2
-        ).apply {
-            this.duration = duration
-            start()
-        }
-        it
+    params.animateTo(
+        x = if (params.x < 0) -screenWidth / 2 else screenWidth / 2
+    ) {
+        updateLayoutParams()
     }
 }
 
 private fun <T : FlyController> FlyViewInfo<T>.removeOnIconTouch(): Boolean {
     var out = false
-    params {
-        if (it.y > Resources.getSystem().displayMetrics.heightPixels / 6) {
-            removeView()
-            out = true
-        }
-        it
+    if (params.y > Resources.getSystem().displayMetrics.heightPixels / 6) {
+        removeView()
+        out = true
     }
     return out
 }

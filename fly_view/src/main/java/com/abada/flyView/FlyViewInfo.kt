@@ -6,6 +6,7 @@ import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.AndroidUiDispatcher
+import com.abada.flyView.windowManagerUtils.animateTo
 import com.abada.flyView.windowManagerUtils.removeFlyView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,7 @@ import kotlinx.coroutines.launch
 data class FlyViewInfo<T : FlyController>(
     val controller: T,
     val onRemove: suspend FlyViewInfo<T>.() -> Unit = {},
-    private var params: WindowManager.LayoutParams = WindowManager.LayoutParams(
+    val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -74,9 +75,8 @@ data class FlyViewInfo<T : FlyController>(
         windowManager.addView(flyView, params)
     }
 
-    fun params(edit: (WindowManager.LayoutParams) -> WindowManager.LayoutParams) {
-        params = edit(params)
-        updateLayoutParams(params)
-    }
+    fun updateLayoutParams() = updateLayoutParams(params)
+    fun animateTo(x: Int, y: Int, duration: Long = 300) =
+        params.animateTo(x, y, duration, ::updateLayoutParams)
 }
 

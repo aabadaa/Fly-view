@@ -12,6 +12,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.abada.flyView.DraggableFlyView
@@ -42,7 +43,10 @@ fun Context.createFlyView() {
                     Log.i(ContentValues.TAG, "createFlyView: backHandler")
                     removeView()
                 }
-                Column(modifier = Modifier.background(Color.White)) {
+                Column(
+                    modifier = Modifier.background(Color.White),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(text = "test ${controller.x}")
                     Button(onClick = removeView) {
                         Text("Close")
@@ -54,6 +58,11 @@ fun Context.createFlyView() {
                     }
                     Button(onClick = { controller.auto = controller.auto.not() }) {
                         Text(text = controller.auto.toString())
+                    }
+                    Button(onClick = {
+                        animateTo(0, 0)
+                    }) {
+                        Text("Gon to center")
                     }
                 }
             }
