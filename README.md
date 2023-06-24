@@ -2,17 +2,20 @@
 this library enables you to add a composable view to the window manager easily using a foreground service
 ## Setup
 ### Step 1 Add this in your root build.gradle at the end of repositories:
+```groovy
 	allprojects {
 		repositories {
 			...
 			maven { url 'https://jitpack.io' }
 		}
 	}
+```
 ### Step 2 Add the dependency, get the last version from [![](https://jitpack.io/v/aabadaa/FLyView.svg)](https://jitpack.io/#aabadaa/FLyView)
+```groovy
 	dependencies {
 	        implementation 'com.github.aabadaa:FLyView:<version>'
 	}
-
+```
 ## Usage
 At first you need to define a ```FlyViewInfo``` like this:
 ```kotlin
