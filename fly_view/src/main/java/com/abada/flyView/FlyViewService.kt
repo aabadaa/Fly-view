@@ -6,8 +6,10 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.abada.flyView.FlyViewService.Companion.show
@@ -21,8 +23,7 @@ import com.abada.flyView.windowManagerUtils.updateFlyView
  */
 class FlyViewService : Service() {
     private lateinit var wm: WindowManager
-    private val ID = "flyViewService"
-    var numberOfShowedViews = 0
+    private var numberOfShowedViews = 0
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val channel = NotificationChannel(
             ID, ID, NotificationManager.IMPORTANCE_LOW
@@ -53,7 +54,7 @@ class FlyViewService : Service() {
     ) {
         (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
             wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
-               this@run.onRemove()
+                this@run.onRemove()
                 numberOfShowedViews--
                 if (numberOfShowedViews == 0) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -66,6 +67,8 @@ class FlyViewService : Service() {
     override fun onBind(intent: Intent): IBinder? = null
 
     companion object {
+        private const val ID = "flyViewService"
+
         /**
          * add here your [FlyViewInfo] to enable the service to show it when your call [show] methods
          */
@@ -78,11 +81,18 @@ class FlyViewService : Service() {
          * @param bundle an optional bundle that will be passed to your controller [FlyController.update] method
          */
         fun show(context: Context, key: String, bundle: Bundle? = null) {
-            Intent(context, FlyViewService::class.java).also {
-                it.putExtra("key", key)
-                bundle?.run { it.putExtras(this) }
-                context.startForegroundService(it)
-            }
+            if (!Settings.canDrawOverlays(context)) context.startActivity(Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${context.packageName}")
+            ).also {
+                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            })
+            else
+                Intent(context, FlyViewService::class.java).also {
+                    it.putExtra("key", key)
+                    bundle?.run { it.putExtras(this) }
+                    context.startForegroundService(it)
+                }
         }
     }
 }
