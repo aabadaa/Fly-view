@@ -29,9 +29,14 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Button(onClick = {
+                            createFlyViewUsingFlyService()
+                        }) {
+                            Text("start using fly service")
+                        }
+                        Button(onClick = {
                             createFlyView()
                         }) {
-                            Text("start")
+                            Text("start using window manager")
                         }
                         Button(onClick = {
                             updateFlyView(5)

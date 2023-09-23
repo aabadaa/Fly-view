@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.FlyViewService
+import com.abada.flyView.windowManagerUtils.addFlyInfo
 import kotlinx.coroutines.delay
 
 class ExampleController : FlyController {
@@ -33,10 +35,11 @@ class ExampleController : FlyController {
     }
 }
 
-fun Context.createFlyView() {
+fun Context.createFlyViewUsingFlyService() {
     FlyViewService.infoProviders["test"] = {
         val controller = ExampleController()
         FlyViewInfo(controller = controller, onRemove = {
+            goToScreenBorder()
             controller.x = 10
             controller.auto = false
             delay(1000)
@@ -47,7 +50,9 @@ fun Context.createFlyView() {
                     removeView()
                 }
                 Column(
-                    modifier = Modifier.clip(RoundedCornerShape(32.dp)).background(Color.LightGray),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(Color.LightGray),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "test ${controller.x}")
@@ -76,6 +81,53 @@ fun Context.createFlyView() {
     }
     FlyViewService.show(this, "test")
 }
+
+fun Context.createFlyView() {
+    val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    val controller = ExampleController()
+
+    windowManager.addFlyInfo(this, "test2", FlyViewInfo(controller = controller, onRemove = {
+        goToScreenBorder()
+        controller.x = 10
+        controller.auto = false
+        delay(1000)
+    }) {
+        DraggableFlyView(autoGoToBorder = controller.auto) {
+            BackHandler(true) {
+                Log.i(ContentValues.TAG, "createFlyView: backHandler")
+                removeView()
+            }
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(Color.LightGray),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "test ${controller.x}")
+                Button(onClick = removeView) {
+                    Text("Close")
+                }
+                Button(onClick = {
+                    controller.x++
+                }) {
+                    Text("x++")
+                }
+                Button(onClick = { controller.auto = controller.auto.not() }) {
+                    Text(text = controller.auto.toString())
+                }
+                Button(onClick = ::goToScreenBorder) {
+                    Text(text = "Go to screen border")
+                }
+                Button(onClick = {
+                    animateTo(0, 0)
+                }) {
+                    Text("Go to center")
+                }
+            }
+        }
+    })
+}
+
 
 fun updateFlyView(value: Int) {
     com.abada.flyView.windowManagerUtils.updateFlyView(
