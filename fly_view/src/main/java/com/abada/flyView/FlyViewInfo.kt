@@ -77,7 +77,7 @@ data class FlyViewInfo<T : FlyController>(
     }
 
     /**
-     * call this method to apply
+     * call this method to apply your modification to [params] object
      * */
     fun updateLayoutParams() = updateLayoutParams(params)
 
