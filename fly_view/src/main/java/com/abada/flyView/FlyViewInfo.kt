@@ -57,8 +57,7 @@ data class FlyViewInfo<T : FlyController>(
         removeView = {
             CoroutineScope(Dispatchers.Main). launch {
                 params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                windowManager.updateViewLayout(flyView, params)
-                onUpdateParams(params)
+                updateLayoutParams()
                 onRemove(this@FlyViewInfo)
                 delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
                 runRecomposeScope.cancel()

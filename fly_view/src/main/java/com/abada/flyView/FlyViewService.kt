@@ -53,8 +53,9 @@ class FlyViewService : Service() {
         key: String
     ) {
         (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
+            val onRemove = onRemove
             wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
-                this@run.onRemove()
+                onRemove()
                 numberOfShowedViews--
                 if (numberOfShowedViews == 0) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
