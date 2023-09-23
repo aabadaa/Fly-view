@@ -3,6 +3,7 @@ package com.abada.flyView
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.PixelFormat
+import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
@@ -51,8 +52,12 @@ data class FlyViewInfo<T : FlyController>(
     ) {
         val runRecomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
         updateLayoutParams = {
-            windowManager.updateViewLayout(flyView, it)
-            onUpdateParams(it)
+            try {
+                windowManager.updateViewLayout(flyView, it)
+                onUpdateParams(it)
+            } catch (e: IllegalArgumentException) {
+                Log.e(javaClass.simpleName, "FlyViewInfo: trying to update removed view")
+            }
         }
         removeView = {
             CoroutineScope(Dispatchers.Main). launch {

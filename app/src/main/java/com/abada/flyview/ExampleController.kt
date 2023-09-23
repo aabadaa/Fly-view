@@ -39,10 +39,10 @@ fun Context.createFlyViewUsingFlyService() {
     FlyViewService.infoProviders["test"] = {
         val controller = ExampleController()
         FlyViewInfo(controller = controller, onRemove = {
-            goToScreenBorder()
             controller.x = 10
             controller.auto = false
             delay(1000)
+            goToScreenBorder()
         }) {
             DraggableFlyView(autoGoToBorder = controller.auto) {
                 BackHandler(true) {
@@ -87,10 +87,10 @@ fun Context.createFlyView() {
     val controller = ExampleController()
 
     windowManager.addFlyInfo(this, "test2", FlyViewInfo(controller = controller, onRemove = {
-        goToScreenBorder()
         controller.x = 10
         controller.auto = false
         delay(1000)
+        goToScreenBorder()
     }) {
         DraggableFlyView(autoGoToBorder = controller.auto) {
             BackHandler(true) {
