@@ -3,14 +3,15 @@ package com.abada.flyview
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.abada.flyview.ui.theme.FLyViewTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,16 +24,19 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                 ) {
 
-                    Column {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Button(onClick = {
                             createFlyView()
                         }) {
-                            Text("start", color = Color.Black)
+                            Text("start")
                         }
                         Button(onClick = {
                             updateFlyView(5)
                         }) {
-                            Text("update", color = Color.Black)
+                            Text("update")
                         }
                     }
                 }

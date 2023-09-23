@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
@@ -14,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
@@ -44,7 +47,7 @@ fun Context.createFlyView() {
                     removeView()
                 }
                 Column(
-                    modifier = Modifier.background(Color.White),
+                    modifier = Modifier.clip(RoundedCornerShape(32.dp)).background(Color.LightGray),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "test ${controller.x}")
@@ -59,10 +62,13 @@ fun Context.createFlyView() {
                     Button(onClick = { controller.auto = controller.auto.not() }) {
                         Text(text = controller.auto.toString())
                     }
+                    Button(onClick = ::goToScreenBorder) {
+                        Text(text = "Go to screen border")
+                    }
                     Button(onClick = {
                         animateTo(0, 0)
                     }) {
-                        Text("Gon to center")
+                        Text("Go to center")
                     }
                 }
             }
