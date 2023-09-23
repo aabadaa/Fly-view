@@ -1,5 +1,8 @@
 # FLyView
 this library enables you to add a composable view to the window manager easily using a foreground service
+## Demo
+[flyView-demo.webm](https://github.com/aabadaa/FLyView/assets/54916786/79d6c4f2-6a83-4ac4-a44c-8e3f74d58dfa)
+
 ## Setup
 ### Step 1 Add this in your root build.gradle at the end of repositories:
 ```groovy
