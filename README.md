@@ -13,7 +13,7 @@ this library enables you to add a composable view to the window manager easily u
 		}
 	}
 ```
-### Step 2 Add the dependency, get the last version from [![](https://jitpack.io/v/aabadaa/FLyView.svg)](https://jitpack.io/#aabadaa/FLyView)
+### Step 2 Add the dependency, get the last version from [![](https://jitpack.io/v/aabadaa/Fly-view.svg)](https://jitpack.io/#aabadaa/Fly-view)
 ```groovy
 	dependencies {
 	        implementation 'com.github.aabadaa:Fly-view:Tag'
