@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import com.abada.flyView.windowManagerUtils.animateTo
 
 /**
  *
@@ -25,7 +24,7 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
     modifier = Modifier.pointerInput(autoGoToBorder, duration) {
         detectDragGestures(onDragEnd = {
             if (!removeOnIconTouch() && autoGoToBorder)
-                goToBorder()
+                goToScreenBorder()
         }) { change, dragAmount ->
             change.consume()
             val (x, y) = dragAmount.x.toInt() to dragAmount.y.toInt()
@@ -35,19 +34,9 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
         }
     },
 ) {
-    LaunchedEffect(key1 = autoGoToBorder, block = { if(autoGoToBorder)goToBorder() })
+    LaunchedEffect(key1 = autoGoToBorder, block = { if(autoGoToBorder)goToScreenBorder() })
     content()
 }
-
-private fun <T : FlyController> FlyViewInfo<T>.goToBorder() {
-    val screenWidth = Resources.getSystem().displayMetrics.widthPixels
-    params.animateTo(
-        x = if (params.x < 0) -screenWidth / 2 else screenWidth / 2
-    ) {
-        updateLayoutParams()
-    }
-}
-
 private fun <T : FlyController> FlyViewInfo<T>.removeOnIconTouch(): Boolean {
     var out = false
     if (params.y > Resources.getSystem().displayMetrics.heightPixels / 6) {

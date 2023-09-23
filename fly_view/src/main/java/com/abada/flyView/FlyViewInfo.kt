@@ -1,6 +1,7 @@
 package com.abada.flyView
 
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.PixelFormat
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -75,8 +76,25 @@ data class FlyViewInfo<T : FlyController>(
         windowManager.addView(flyView, params)
     }
 
+    /**
+     * call this method to apply
+     * */
     fun updateLayoutParams() = updateLayoutParams(params)
-    fun animateTo(x: Int, y: Int, duration: Long = 300) =
+
+    /**
+     * This method moves the fly view smoothly to a specific position
+     * */
+    fun animateTo(x: Int = params.x, y: Int = params.y, duration: Long = 300) =
         params.animateTo(x, y, duration, ::updateLayoutParams)
+
+    /**
+     * Call this method to move the fly view to the border of the screen
+     * */
+    fun goToScreenBorder(duration: Long = 300) {
+        val screenWidth = Resources.getSystem().displayMetrics.widthPixels
+        animateTo(
+            x = if (params.x < 0) -screenWidth / 2 else screenWidth / 2, duration = duration
+        )
+    }
 }
 
