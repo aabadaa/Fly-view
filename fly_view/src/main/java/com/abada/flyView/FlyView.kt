@@ -3,7 +3,6 @@ package com.abada.flyView
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
-import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import androidx.activity.OnBackPressedDispatcher
@@ -29,30 +28,47 @@ internal class FlyView constructor(
     runRecomposeScope: CoroutineScope,
     private val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
     private val content: @Composable () -> Unit,
-) : AbstractComposeView(context, null, 0) {
-    private val savedStateRegisterOwner = CustomSavedStateRegistryOwner()
-    private val onBackPressedDispatcherOwner = object : OnBackPressedDispatcherOwner {
-        override val onBackPressedDispatcher = OnBackPressedDispatcher()
-
-        override val lifecycle: Lifecycle
-            get() = savedStateRegisterOwner.lifecycle
-
-
-    }
+) : AbstractComposeView(context, null, 0), SavedStateRegistryOwner {
+    // compose
     override var shouldCreateCompositionOnAttachedToWindow: Boolean = true
 
-    init {
-        val lifecycleOwner = savedStateRegisterOwner.also {
-            it.performRestore(null)
-            it.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    @Composable
+    override fun Content() {
+        content()
+        if (isAttachedToWindow) {
+            Log.i(ContentValues.TAG, "flyContent: showed")
+            createComposition()
+            (lifecycle as LifecycleRegistry).currentState = Lifecycle.State.RESUMED
         }
-        val viewModelStore = ViewModelStore()
+    }
+
+    //lifecycle
+    override val savedStateRegistry: SavedStateRegistry
+        get() = savedStateRegistryController.savedStateRegistry
+
+    private var lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
+    override val lifecycle: Lifecycle = lifecycleRegistry
+
+    private var savedStateRegistryController: SavedStateRegistryController =
+        SavedStateRegistryController.create(this)
+
+    private val onBackPressedDispatcherOwner = object : OnBackPressedDispatcherOwner {
+        override val onBackPressedDispatcher = OnBackPressedDispatcher()
+        override val lifecycle: Lifecycle
+            get() = this@FlyView.lifecycle
+    }
+
+    init {
+        val lifecycleOwner = this.apply {
+            savedStateRegistryController.performRestore(null)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        }
         setViewTreeLifecycleOwner(lifecycleOwner)
         setViewTreeOnBackPressedDispatcherOwner(onBackPressedDispatcherOwner)
         setViewTreeSavedStateRegistryOwner(lifecycleOwner)
         setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
             override val viewModelStore: ViewModelStore
-                get() = viewModelStore
+                get() = ViewModelStore()
         })
         val recompose = Recomposer(AndroidUiDispatcher.CurrentThread)
         compositionContext = recompose
@@ -61,41 +77,9 @@ internal class FlyView constructor(
         }
     }
 
-    @Composable
-    override fun Content() {
-        content()
-        if (isAttachedToWindow) {
-            Log.i(ContentValues.TAG, "flyContent: showed")
-            createComposition()
-            (savedStateRegisterOwner.lifecycle as LifecycleRegistry).currentState = Lifecycle.State.RESUMED
-        }
-    }
-
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
         onBackPressedDispatcherOwner.onBackPressedDispatcher.onBackPressed()
         return keyDispatcher?.invoke(event) ?: super.dispatchKeyEvent(event)
-    }
-
-    override fun getAccessibilityClassName(): CharSequence = javaClass.name
-}
-
-
-private class CustomSavedStateRegistryOwner : SavedStateRegistryOwner {
-
-    private var mLifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
-    private var mSavedStateRegistryController: SavedStateRegistryController =
-        SavedStateRegistryController.create(this)
-
-    override val savedStateRegistry: SavedStateRegistry
-        get() = mSavedStateRegistryController.savedStateRegistry
-
-    override val lifecycle: Lifecycle = mLifecycleRegistry
-    fun handleLifecycleEvent(event: Lifecycle.Event) {
-        mLifecycleRegistry.handleLifecycleEvent(event)
-    }
-
-    fun performRestore(savedState: Bundle?) {
-        mSavedStateRegistryController.performRestore(savedState)
     }
 
 }
