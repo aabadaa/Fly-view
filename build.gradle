@@ -14,4 +14,6 @@ plugins {
     id 'org.jetbrains.kotlin.android' version "$kotlin_version" apply false
     //https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin
     id("com.autonomousapps.dependency-analysis") version "1.19.0"
+    id 'com.google.dagger.hilt.android' version '2.44' apply false
+
 }

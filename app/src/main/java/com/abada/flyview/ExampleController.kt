@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,7 +28,7 @@ import com.abada.flyView.windowManagerUtils.addFlyInfo
 import kotlinx.coroutines.delay
 
 class ExampleController : FlyController {
-    var x by mutableStateOf(0)
+    var x by mutableIntStateOf(0)
     var auto by mutableStateOf(false)
 
     override fun update(data: Bundle) {
