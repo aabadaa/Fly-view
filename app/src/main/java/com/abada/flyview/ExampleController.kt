@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +38,7 @@ class ExampleController : FlyController {
 }
 
 fun Context.createFlyViewUsingFlyService() {
-    FlyViewService.infoProviders["test"] = {
+    FlyViewService.infoProviders["fly service"] = {
         val controller = ExampleController()
         FlyViewInfo(controller = controller, onRemove = {
             controller.x = 10
@@ -45,93 +46,66 @@ fun Context.createFlyViewUsingFlyService() {
             delay(1000)
             goToScreenBorder()
         }) {
-            DraggableFlyView(autoGoToBorder = controller.auto) {
-                BackHandler(true) {
-                    Log.i(ContentValues.TAG, "createFlyView: backHandler")
-                    removeView()
-                }
-                Column(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(32.dp))
-                        .background(Color.LightGray),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "test ${controller.x}")
-                    Button(onClick = removeView) {
-                        Text("Close")
-                    }
-                    Button(onClick = {
-                        controller.x++
-                    }) {
-                        Text("x++")
-                    }
-                    Button(onClick = { controller.auto = controller.auto.not() }) {
-                        Text(text = controller.auto.toString())
-                    }
-                    Button(onClick = ::goToScreenBorder) {
-                        Text(text = "Go to screen border")
-                    }
-                    Button(onClick = {
-                        animateTo(0, 0)
-                    }) {
-                        Text("Go to center")
-                    }
-                }
-            }
+            FlyViewContent()
         }
     }
-    FlyViewService.show(this, "test")
+    FlyViewService.show(this, "fly service")
 }
 
 fun Context.createFlyView() {
     val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val controller = ExampleController()
 
-    windowManager.addFlyInfo(this, "test2", FlyViewInfo(controller = controller, onRemove = {
+    windowManager.addFlyInfo(this, "fly", FlyViewInfo(controller = controller, onRemove = {
         controller.x = 10
         controller.auto = false
         delay(1000)
         goToScreenBorder()
     }) {
-        DraggableFlyView(autoGoToBorder = controller.auto) {
-            BackHandler(true) {
-                Log.i(ContentValues.TAG, "createFlyView: backHandler")
-                removeView()
-            }
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(Color.LightGray),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text = "test ${controller.x}")
-                Button(onClick = removeView) {
-                    Text("Close")
-                }
-                Button(onClick = {
-                    controller.x++
-                }) {
-                    Text("x++")
-                }
-                Button(onClick = { controller.auto = controller.auto.not() }) {
-                    Text(text = controller.auto.toString())
-                }
-                Button(onClick = ::goToScreenBorder) {
-                    Text(text = "Go to screen border")
-                }
-                Button(onClick = {
-                    animateTo(0, 0)
-                }) {
-                    Text("Go to center")
-                }
-            }
-        }
+        FlyViewContent()
     })
 }
 
+@Composable
+private fun FlyViewInfo<ExampleController>.FlyViewContent() {
+    DraggableFlyView(autoGoToBorder = controller.auto) {
+        BackHandler(true) {
+            Log.i(ContentValues.TAG, "createFlyView: backHandler")
+            removeView()
+        }
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(32.dp))
+                .background(Color.LightGray),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "x = ${controller.x}")
+            Button(onClick = removeView) {
+                Text("Close")
+            }
+            Button(onClick = {
+                controller.x++
+            }) {
+                Text("x++")
+            }
+            Button(onClick = { controller.auto = controller.auto.not() }) {
+                Text(text = controller.auto.toString())
+            }
+            Button(onClick = ::goToScreenBorder) {
+                Text(text = "Go to screen border")
+            }
+            Button(onClick = {
+                animateTo(0, 0)
+            }) {
+                Text("Go to center")
+            }
+        }
+    }
 
-fun updateFlyView(value: Int) {
+}
+
+fun updateFlyView(key: String, value: Int) {
     com.abada.flyView.windowManagerUtils.updateFlyView(
-        "test",
+        key,
         Bundle().also { it.putInt("exampleInt", value) })
 }

@@ -13,7 +13,12 @@ import androidx.compose.runtime.Recomposer
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import androidx.compose.ui.platform.compositionContext
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
@@ -23,7 +28,7 @@ import kotlinx.coroutines.launch
 
 
 @SuppressLint("ViewConstructor")
-internal class FlyView constructor(
+internal class FlyView(
     context: Context,
     runRecomposeScope: CoroutineScope,
     private val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
@@ -32,6 +37,9 @@ internal class FlyView constructor(
     // compose
     override var shouldCreateCompositionOnAttachedToWindow: Boolean = true
 
+    init {
+        windowToken
+    }
     @Composable
     override fun Content() {
         content()
