@@ -49,7 +49,7 @@ fun Context.createFlyViewUsingFlyService() {
             FlyViewContent()
         }
     }
-    FlyViewService.show(this, "fly service")
+    FlyViewService.show(this, "fly service", FlyServiceImpl::class.java)
 }
 
 fun Context.createFlyView() {

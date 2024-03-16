@@ -21,7 +21,7 @@ import com.abada.flyView.windowManagerUtils.updateFlyView
  * This service starts a foreground service when you call [show] method
  * this can be used to show a [FlyView] when your activity is not running
  */
-class FlyViewService : Service() {
+abstract class FlyViewService : Service() {
     private lateinit var wm: WindowManager
     private var numberOfShowedViews = 0
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -81,15 +81,21 @@ class FlyViewService : Service() {
          * @param key the key you used to add your [FlyViewInfo] to the [infoProviders]
          * @param bundle an optional bundle that will be passed to your controller [FlyController.update] method
          */
-        fun show(context: Context, key: String, bundle: Bundle? = null) {
-            if (!Settings.canDrawOverlays(context)) context.startActivity(Intent(
+        fun show(
+            context: Context,
+            key: String,
+            serviceClass: Class<out FlyViewService>,
+            bundle: Bundle? = null,
+        ) {
+            if (!Settings.canDrawOverlays(context))
+                context.startActivity(Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:${context.packageName}")
             ).also {
                 it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             })
             else
-                Intent(context, FlyViewService::class.java).also {
+                Intent(context, serviceClass).also {
                     it.putExtra("key", key)
                     bundle?.run { it.putExtras(this) }
                     context.startForegroundService(it)
