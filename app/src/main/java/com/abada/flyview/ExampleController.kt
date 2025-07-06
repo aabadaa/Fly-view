@@ -3,6 +3,7 @@ package com.abada.flyview
 import android.content.Context
 import android.os.Bundle
 import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,7 +45,12 @@ fun Context.createFlyViewUsingFlyService() {
             controller.auto = false
             delay(1000)
             goToScreenBorder()
-        }) {
+        },
+            keyDispatcher = {
+
+                null
+            }
+            ) {
             FlyViewContent()
         }
     }
@@ -75,6 +81,9 @@ private fun FlyViewInfo<ExampleController>.FlyViewContent() {
                 .background(Color.LightGray),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            BackHandler {
+                removeView()
+            }
             Text(text = "x = ${controller.x}")
             var text by remember { mutableStateOf("text") }
             TextField(

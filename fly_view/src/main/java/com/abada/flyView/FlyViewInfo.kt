@@ -37,7 +37,7 @@ data class FlyViewInfo<T : FlyController>(
         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
         PixelFormat.TRANSLUCENT
     ).also { it.windowAnimations = android.R.style.Animation },
-    internal val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
+    internal val keyDispatcher: ((KeyEvent?) -> Boolean?)? = null,
     internal val content: @Composable FlyViewInfo<T>.() -> Unit,
 ) {
     internal lateinit var flyView: FlyView

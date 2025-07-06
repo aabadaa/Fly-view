@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 internal class FlyView(
     context: Context,
     runRecomposeScope: CoroutineScope,
-    private val keyDispatcher: ((KeyEvent?) -> Boolean)? = null,
+    private val keyDispatcher: ((KeyEvent?) -> Boolean?)? = null,
     private val content: @Composable () -> Unit,
 ) : AbstractComposeView(context, null, 0), SavedStateRegistryOwner {
     // compose
@@ -85,7 +85,10 @@ internal class FlyView(
     }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        onBackPressedDispatcherOwner.onBackPressedDispatcher.onBackPressed()
+        if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+            onBackPressedDispatcherOwner.onBackPressedDispatcher.onBackPressed()
+            return true
+        }
         return keyDispatcher?.invoke(event) ?: super.dispatchKeyEvent(event)
     }
 
