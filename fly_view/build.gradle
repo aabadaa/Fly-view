@@ -1,20 +1,16 @@
 plugins {
-    id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
-    id 'maven-publish'
-}
-ext {
-    kotlin_version = '1.8.10'
-    compose_ui_version = '1.4.0'
-    compose_compiler = '1.4.3'
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.maven.publish)
 }
 android {
     namespace 'com.abada.flyview'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         minSdk 26
-        targetSdk 34
+        targetSdk 35
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -32,25 +28,21 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
-    composeOptions {
-        kotlinCompilerVersion kotlin_version
-        kotlinCompilerExtensionVersion compose_compiler
-    }
     buildFeatures {
         compose true
     }
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.1'
-    implementation platform('androidx.compose:compose-bom:2023.08.00')
-    implementation 'androidx.activity:activity-compose'
-    implementation "androidx.compose.ui:ui"
-    implementation "androidx.compose.foundation:foundation"
-    implementation "androidx.compose.foundation:foundation-layout"
-    implementation "androidx.compose.material:material"
-
+    implementation libs.androidx.core.ktx
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.foundation.layout
+    implementation libs.androidx.compose.material3
 }
+
 afterEvaluate {
     publishing {
         publications {

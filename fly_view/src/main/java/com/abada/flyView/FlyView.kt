@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Recomposer
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.AndroidUiDispatcher
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.compositionContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
@@ -37,9 +38,6 @@ internal class FlyView(
     // compose
     override var shouldCreateCompositionOnAttachedToWindow: Boolean = true
 
-    init {
-        windowToken
-    }
     @Composable
     override fun Content() {
         content()
@@ -83,6 +81,7 @@ internal class FlyView(
         runRecomposeScope.launch {
             recompose.runRecomposeAndApplyChanges()
         }
+       setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {

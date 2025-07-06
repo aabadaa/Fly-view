@@ -1,20 +1,19 @@
 package com.abada.flyview
 
-import android.content.ContentValues
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,10 +68,7 @@ fun Context.createFlyView() {
 @Composable
 private fun FlyViewInfo<ExampleController>.FlyViewContent() {
     DraggableFlyView(autoGoToBorder = controller.auto) {
-        BackHandler(true) {
-            Log.i(ContentValues.TAG, "createFlyView: backHandler")
-            removeView()
-        }
+
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(32.dp))
@@ -80,6 +76,11 @@ private fun FlyViewInfo<ExampleController>.FlyViewContent() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "x = ${controller.x}")
+            var text by remember { mutableStateOf("text") }
+            TextField(
+                value = text,
+                onValueChange = { text = it }
+            )
             Button(onClick = removeView) {
                 Text("Close")
             }

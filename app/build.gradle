@@ -1,19 +1,19 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
-    id 'com.google.dagger.hilt.android'
-
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
     namespace 'com.abada.modulesfactory'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.abada.modulesfactory"
         minSdk 29
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -38,31 +38,30 @@ android {
     buildFeatures {
         compose true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion compose_compiler
-    }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
-    kapt {
-        correctErrorTypes true
-    }
-
 }
 
 dependencies {
     implementation project(':fly_view')
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    implementation 'androidx.activity:activity-compose:1.8.2'
-    implementation "androidx.compose.ui:ui:$compose_ui_version"
-    implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
-    implementation 'androidx.compose.material:material:1.6.3'
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
-    implementation "com.google.dagger:hilt-android:2.51"
-    kapt "com.google.dagger:hilt-compiler:2.51"
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
+    // Core Android libraries
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.activity.compose
+
+    // Compose BOM
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    debugImplementation libs.androidx.compose.ui.tooling
+
+    // Hilt
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+    implementation libs.androidx.hilt.navigation.compose
 }

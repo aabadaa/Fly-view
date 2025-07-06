@@ -1,0 +1,16 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+/AndroidProjectSystem.xml
+/appInsightsSettings.xml
+/ChatHistory_schema_v2.xml
+/compiler.xml
+/deploymentTargetDropDown.xml
+/deploymentTargetSelector.xml
+/gradle.xml
+/kotlinc.xml
+/migrations.xml
+/misc.xml
+/inspectionProfiles/Project_Default.xml
+/runConfigurations.xml
+/vcs.xml
