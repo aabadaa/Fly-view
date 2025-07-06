@@ -18,14 +18,15 @@ import kotlinx.coroutines.launch
 
 /**
  * A holder to all information needed for the [FlyView]
- *  @property controller used to send bundles from anywhere to the [FlyView]
- *  @property onRemove pass a lambda which will be called before removing the [FlyView]
- *  @property params a [WindowManager.LayoutParams] that passed when adding the [FlyView]
- *  @property keyDispatcher this will be passed to the [FlyView] to handle key events
- *  @property content the content of the flyView
- *  @property flyView the [android.view.View] object that will be added to the [WindowManager]
- *  @property removeView call it in your view to remove it
- *  @property params pass your lambda that updates the view's layout params to update it
+ *
+ * @param T The type of controller that extends [FlyController]
+ * @property controller Used to send bundles from anywhere to the [FlyView]
+ * @property onRemove Pass a lambda which will be called before removing the [FlyView]
+ * @property params A [WindowManager.LayoutParams] that passed when adding the [FlyView]
+ * @property keyDispatcher This will be passed to the [FlyView] to handle key events
+ * @property content The content of the flyView
+ * @property flyView The [android.view.View] object that will be added to the [WindowManager]
+ * @property removeView Call it in your view to remove it
  */
 data class FlyViewInfo<T : FlyController>(
     val controller: T,
@@ -40,10 +41,24 @@ data class FlyViewInfo<T : FlyController>(
     internal val keyDispatcher: ((KeyEvent?) -> Boolean?)? = null,
     internal val content: @Composable FlyViewInfo<T>.() -> Unit,
 ) {
+    /** The actual FlyView instance that will be displayed */
     internal lateinit var flyView: FlyView
+
+    /** Function to update the layout parameters of the view */
     private lateinit var updateLayoutParams: (WindowManager.LayoutParams) -> Unit
+
+    /** Function to remove the view from the WindowManager */
     lateinit var removeView: () -> Unit
 
+    /**
+     * Internal method to add this FlyView to the WindowManager.
+     * Sets up the view hierarchy, lifecycle management, and event handling.
+     *
+     * @param context Context used to create the view
+     * @param key Unique identifier for this FlyView
+     * @param windowManager The WindowManager to add the view to
+     * @param onUpdateParams Callback invoked when layout parameters are updated
+     */
     internal fun addToWindowManager(
         context: Context,
         key: String,
@@ -81,19 +96,27 @@ data class FlyViewInfo<T : FlyController>(
     }
 
     /**
-     * call this method to apply your modification to [params] object
-     * */
+     * Call this method to apply your modification to [params] object.
+     * Updates the view's layout parameters in the WindowManager.
+     */
     fun updateLayoutParams() = updateLayoutParams(params)
 
     /**
-     * This method moves the fly view smoothly to a specific position
-     * */
+     * This method moves the fly view smoothly to a specific position.
+     *
+     * @param x Target X coordinate (defaults to current X position)
+     * @param y Target Y coordinate (defaults to current Y position)
+     * @param duration Animation duration in milliseconds
+     */
     fun animateTo(x: Int = params.x, y: Int = params.y, duration: Long = 300) =
         params.animateTo(x, y, duration, ::updateLayoutParams)
 
     /**
-     * Call this method to move the fly view to the border of the screen
-     * */
+     * Call this method to move the fly view to the border of the screen.
+     * The view will move to the left or right edge based on its current position.
+     *
+     * @param duration Animation duration in milliseconds
+     */
     fun goToScreenBorder(duration: Long = 300) {
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels
         animateTo(

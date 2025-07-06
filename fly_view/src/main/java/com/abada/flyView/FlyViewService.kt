@@ -17,13 +17,26 @@ import com.abada.flyView.windowManagerUtils.addFlyInfo
 import com.abada.flyView.windowManagerUtils.updateFlyView
 
 /**
+ * This service starts a foreground service when you call [show] method.
+ * This can be used to show a [FlyView] when your activity is not running.
  *
- * This service starts a foreground service when you call [show] method
- * this can be used to show a [FlyView] when your activity is not running
+ * Extend this class and implement your own service logic for managing FlyViews
+ * in the background. The service automatically manages its lifecycle based on
+ * the number of active FlyViews.
  */
 abstract class FlyViewService : Service() {
     private lateinit var wm: WindowManager
     private var numberOfShowedViews = 0
+
+    /**
+     * Called when the service is started with an intent.
+     * Creates a foreground notification and shows the requested FlyView.
+     *
+     * @param intent Intent containing the FlyView key and optional data bundle
+     * @param flags Additional data about this start request
+     * @param startId A unique integer representing this specific request to start
+     * @return The return value indicates what semantics the system should use for the service's current started state
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val channel = NotificationChannel(
             ID, ID, NotificationManager.IMPORTANCE_LOW
@@ -44,11 +57,21 @@ abstract class FlyViewService : Service() {
         return START_STICKY_COMPATIBILITY
     }
 
+    /**
+     * Called when the service is first created.
+     * Initializes the WindowManager for displaying FlyViews.
+     */
     override fun onCreate() {
         super.onCreate()
         wm = applicationContext.getSystemService(WINDOW_SERVICE) as WindowManager
     }
 
+    /**
+     * Shows a FlyView with the specified key.
+     * Retrieves the FlyViewInfo from infoProviders and adds it to the WindowManager.
+     *
+     * @param key The identifier for the FlyView to show
+     */
     private fun showView(
         key: String
     ) {
@@ -65,21 +88,33 @@ abstract class FlyViewService : Service() {
         }
     }
 
+    /**
+     * Called when a client binds to the service.
+     * This service does not support binding, so this returns null.
+     *
+     * @param intent The Intent that was used to bind to this service
+     * @return null since this service does not support binding
+     */
     override fun onBind(intent: Intent): IBinder? = null
 
     companion object {
+        /** Notification channel ID for the foreground service */
         private const val ID = "flyViewService"
 
         /**
-         * add here your [FlyViewInfo] to enable the service to show it when your call [show] methods
+         * Add here your [FlyViewInfo] to enable the service to show it when you call [show] methods.
+         * Map of FlyView keys to their corresponding FlyViewInfo provider functions.
          */
         val infoProviders = mutableMapOf<String, () -> FlyViewInfo<out FlyController>>()
 
         /**
-         * call this method to show a [FlyViewInfo] that you added to the [infoProviders]
-         * @param context a context to start the service
-         * @param key the key you used to add your [FlyViewInfo] to the [infoProviders]
-         * @param bundle an optional bundle that will be passed to your controller [FlyController.update] method
+         * Call this method to show a [FlyViewInfo] that you added to the [infoProviders].
+         * If overlay permission is not granted, it will redirect to the permission settings.
+         *
+         * @param context A context to start the service
+         * @param key The key you used to add your [FlyViewInfo] to the [infoProviders]
+         * @param serviceClass The class of your FlyViewService implementation
+         * @param bundle An optional bundle that will be passed to your controller [FlyController.update] method
          */
         fun show(
             context: Context,

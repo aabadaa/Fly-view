@@ -25,11 +25,13 @@ import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.NoController
 
 /**
- * define a FlyViewInfo and call this method to add it to the WindowManager
+ * Define a FlyViewInfo and call this method to add it to the WindowManager.
+ * This function handles overlay permission checking and automatically shows a close view
+ * when multiple FlyViews are displayed.
  *
- * @param context any context to create a [android.view.View] object
- * @param key a string to identify your view , it is used when you want to update it using [updateFlyView] method or remove it using [removeFlyView]
- * @param flyViewInfo the info of your fly view that holds your view and your controller
+ * @param context Any context to create a [android.view.View] object
+ * @param key A string to identify your view, used when you want to update it using [updateFlyView] method or remove it using [removeFlyView]
+ * @param flyViewInfo The info of your fly view that holds your view and your controller
  */
 fun <T : FlyController> WindowManager.addFlyInfo(
     context: Context,
@@ -72,9 +74,10 @@ fun <T : FlyController> WindowManager.addFlyInfo(
 
 
 /**
- * call this method to remove views those are added by ``addFlyInfo``
+ * Call this method to remove views those are added by `addFlyInfo`.
+ * Automatically manages the close view visibility and cleans up resources.
  *
- * @param key the identifier of your fly view
+ * @param key The identifier of your fly view
  */
 fun WindowManager.removeFlyView(key: String) {
     showedViews.remove(key)?.let {
@@ -92,17 +95,21 @@ fun WindowManager.removeFlyView(key: String) {
 
 
 /**
- * call this method to pass data to your showed fly views by passing it in a bundle object
+ * Call this method to pass data to your showed fly views by passing it in a bundle object.
+ * Updates the controller of the specified FlyView with the provided data.
  *
- * @param key the identifier of your fly view
+ * @param key The identifier of your fly view
+ * @param bundle The data bundle to pass to the FlyView's controller
+ * @return true if the view was found and updated, false otherwise
  */
 fun updateFlyView(key: String, bundle: Bundle): Boolean =
     showedViews[key]?.controller?.update(bundle) == Unit
 
 /**
- * this view is showed when the user drag the [com.abada.flyView.FlyView] to the bottom of the screen to remove it.
+ * This view is showed when the user drags the [com.abada.flyView.FlyView] to the bottom of the screen to remove it.
  *
- * assign your new content to fit your app style
+ * Assign your new content to fit your app style. The default implementation shows a delete icon
+ * with a gradient background in the bottom portion of the screen.
  */
 var closeViewContent: @Composable () -> Unit = {
     Box(

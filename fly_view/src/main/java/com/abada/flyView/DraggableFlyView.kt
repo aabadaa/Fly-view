@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 
 /**
- *
  * This method makes your flyView draggable
- * @param autoGoToBorder if it is ``false`` the view will stay where the user left it
- * @param duration the amount of time needed to move the view to the border of the screen
- * @param content the content of the draggable flyView
+ *
+ * @param autoGoToBorder If it is `false` the view will stay where the user left it
+ * @param duration The amount of time needed to move the view to the border of the screen in milliseconds
+ * @param content The content of the draggable flyView
  */
 @Composable
 fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
