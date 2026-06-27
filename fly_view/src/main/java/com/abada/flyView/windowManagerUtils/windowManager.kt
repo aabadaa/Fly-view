@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.core.net.toUri
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.NoController
@@ -39,9 +40,9 @@ fun <T : FlyController> WindowManager.addFlyInfo(
     flyViewInfo: FlyViewInfo<T>
 ) {
     if (!Settings.canDrawOverlays(context)) context.startActivity(Intent(
-        Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")
-    ).also {
-        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${context.packageName}".toUri()
+    ).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
     })
 
     if (showedViews.containsKey(key)) return

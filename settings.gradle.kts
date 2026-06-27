@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.10.0'
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -16,5 +16,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "FLyView"
-include ':app'
-include ':fly_view'
+include(":app")
+include(":fly_view")

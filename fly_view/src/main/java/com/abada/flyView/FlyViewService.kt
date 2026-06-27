@@ -6,12 +6,13 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import com.abada.flyView.FlyViewService.Companion.show
 import com.abada.flyView.windowManagerUtils.addFlyInfo
 import com.abada.flyView.windowManagerUtils.updateFlyView
@@ -41,8 +42,7 @@ abstract class FlyViewService : Service() {
         val channel = NotificationChannel(
             ID, ID, NotificationManager.IMPORTANCE_LOW
         )
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService<NotificationManager>()!!
         notificationManager.createNotificationChannel(channel)
 
         val notification: Notification = NotificationCompat.Builder(this, ID).build()
@@ -63,7 +63,7 @@ abstract class FlyViewService : Service() {
      */
     override fun onCreate() {
         super.onCreate()
-        wm = applicationContext.getSystemService(WINDOW_SERVICE) as WindowManager
+        wm = getSystemService<WindowManager>()!!
     }
 
     /**
@@ -124,11 +124,11 @@ abstract class FlyViewService : Service() {
         ) {
             if (!Settings.canDrawOverlays(context))
                 context.startActivity(Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${context.packageName}")
-            ).also {
-                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            })
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    "package:${context.packageName}".toUri()
+                ).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                })
             else
                 Intent(context, serviceClass).also {
                     it.putExtra("key", key)

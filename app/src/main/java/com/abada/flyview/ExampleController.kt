@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.core.content.getSystemService
+import androidx.core.os.bundleOf
 import com.abada.flyView.DraggableFlyView
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
@@ -58,7 +60,7 @@ fun Context.createFlyViewUsingFlyService() {
 }
 
 fun Context.createFlyView() {
-    val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    val windowManager = getSystemService<WindowManager>()!!
     val controller = ExampleController()
 
     windowManager.addFlyInfo(this, "fly", FlyViewInfo(controller = controller, onRemove = {
@@ -117,5 +119,6 @@ private fun FlyViewInfo<ExampleController>.FlyViewContent() {
 fun updateFlyView(key: String, value: Int) {
     com.abada.flyView.windowManagerUtils.updateFlyView(
         key,
-        Bundle().also { it.putInt("exampleInt", value) })
+        bundleOf("exampleInt" to value)
+    )
 }
