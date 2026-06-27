@@ -1,15 +1,15 @@
 [versions]
-kotlin = "2.2.0"
-android-gradle-plugin = "8.11.0"
-core-ktx = "1.16.0"
-lifecycle-runtime-ktx = "2.9.1"
-activity-compose = "1.10.1"
-compose-bom = "2025.06.01"
-material = "1.8.3"
-hilt = "2.56.2"
+kotlin = "2.2.10"
+android-gradle-plugin = "9.2.1"
+core-ktx = "1.15.0"
+lifecycle-runtime-ktx = "2.8.7"
+activity-compose = "1.10.0"
+compose-bom = "2024.12.01"
+material = "1.12.0"
+hilt = "2.54"
 hilt-navigation-compose = "1.2.0"
 dependency-analysis = "2.19.0"
-ksp = "2.2.0-2.0.2"
+ksp = "2.3.2"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }

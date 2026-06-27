@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A holder to all information needed for the [FlyView]
@@ -38,8 +39,8 @@ data class FlyViewInfo<T : FlyController>(
         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
         PixelFormat.TRANSLUCENT
     ).also { it.windowAnimations = android.R.style.Animation },
-    internal val keyDispatcher: ((KeyEvent?) -> Boolean?)? = null,
-    internal val content: @Composable FlyViewInfo<T>.() -> Unit,
+    val keyDispatcher: ((KeyEvent?) -> Boolean?)? = null,
+    val content: @Composable FlyViewInfo<T>.() -> Unit,
 ) {
     /** The actual FlyView instance that will be displayed */
     internal lateinit var flyView: FlyView
@@ -75,11 +76,11 @@ data class FlyViewInfo<T : FlyController>(
             }
         }
         removeView = {
-            CoroutineScope(Dispatchers.Main). launch {
+            CoroutineScope(Dispatchers.Main).launch {
                 params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 updateLayoutParams()
                 onRemove(this@FlyViewInfo)
-                delay(100)// if there is an animation the app will crash , so I delayed a little to wait the animation to finih
+                delay(100.milliseconds)// if there is an animation the app will crash , so I delayed a little to wait the animation to finish
                 runRecomposeScope.cancel()
                 windowManager.removeFlyView(key)
             }
