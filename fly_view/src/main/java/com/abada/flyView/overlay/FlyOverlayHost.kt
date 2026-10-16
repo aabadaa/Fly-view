@@ -76,7 +76,9 @@ internal object FlyOverlayHost {
     private var hadWanted = false
 
     private var startedActivities = 0
-    private val toBackground = Runnable { foreground = false }
+    // start() can't know how many activities are already started, so the count can be short and
+    // reaching 0 is only a hint: the system has the last word on whether the app is on the screen.
+    private val toBackground = Runnable { foreground = isOnScreen() }
 
     // state
 
@@ -94,7 +96,7 @@ internal object FlyOverlayHost {
         app = application
         val wm = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         windowManager = wm
-        foreground = isProcessForeground(application)
+        foreground = isOnScreen()
         startedActivities = 0
         application.registerActivityLifecycleCallbacks(activityCallbacks)
         application.registerComponentCallbacks(componentCallbacks)
@@ -269,10 +271,10 @@ internal object FlyOverlayHost {
         override fun onLowMemory() {}
     }
 
-    private fun isProcessForeground(context: Context): Boolean {
-        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    /** `true` while an activity of this process is on top. A foreground service alone does not count. */
+    private fun isOnScreen(): Boolean {
         val info = ActivityManager.RunningAppProcessInfo()
         ActivityManager.getMyMemoryState(info)
-        return info.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
+        return info.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
     }
 }
