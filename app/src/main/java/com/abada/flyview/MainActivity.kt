@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import com.abada.flyview.v2.V2Activity
 import com.abada.flyview.ui.theme.FLyViewTheme
 
 class MainActivity : ComponentActivity() {
@@ -57,6 +59,11 @@ fun MainScreen() {
                 updateFlyView("fly",5)
             }) {
                 Text("set x to 5 in normal fly")
+            }
+            Button(onClick = {
+                context.startActivity(Intent(context, V2Activity::class.java))
+            }) {
+                Text("new overlay API demo")
             }
         }
     }
