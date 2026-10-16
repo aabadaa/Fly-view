@@ -78,6 +78,8 @@ internal object FlyOverlayHost {
     private var startedActivities = 0
     // start() can't know how many activities are already started, so the count can be short and
     // reaching 0 is only a hint: the system has the last word on whether the app is on the screen.
+    private val stopIfNeverWanted = Runnable { if (isRunning && !hadWanted && stopWhenEmpty) stop() }
+
     private val toBackground = Runnable { foreground = isOnScreen() }
 
     // state
@@ -121,9 +123,8 @@ internal object FlyOverlayHost {
         hostView = view
         hadWanted = false
         isRunning = true
-        handler.postDelayed({
-            if (isRunning && !hadWanted && stopWhenEmpty) stop()
-        }, IDLE_START_GRACE_MS)
+        handler.removeCallbacks(stopIfNeverWanted)
+        handler.postDelayed(stopIfNeverWanted, IDLE_START_GRACE_MS)
     }
 
     fun stop() {
@@ -145,6 +146,7 @@ internal object FlyOverlayHost {
         app?.unregisterActivityLifecycleCallbacks(activityCallbacks)
         app?.unregisterComponentCallbacks(componentCallbacks)
         handler.removeCallbacks(toBackground)
+        handler.removeCallbacks(stopIfNeverWanted)
         closingReason = null
         service?.stopNow()
     }
