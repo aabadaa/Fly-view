@@ -5,6 +5,10 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+plugins {
+    // downloads the JDK that gradle/gradle-daemon-jvm.properties asks for when it is not installed
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
