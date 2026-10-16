@@ -1,14 +1,14 @@
 package com.abada.flyView
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
-import android.util.Log
+import android.content.res.Configuration
 import android.view.KeyEvent
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.setViewTreeOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.Recomposer
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.AndroidUiDispatcher
@@ -25,63 +25,99 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-
+/**
+ * A compose host that lives outside of an activity, so it provides the lifecycle, saved state,
+ * view model store and back dispatcher owners that compose expects.
+ *
+ * Call [dispose] when the view is removed from the window to release everything.
+ */
 @SuppressLint("ViewConstructor")
 internal class FlyView(
     context: Context,
-    runRecomposeScope: CoroutineScope,
     private val keyDispatcher: ((KeyEvent?) -> Boolean?)? = null,
+    /** Compose to the parent composition instead of an own recomposer, like `Popup` and `Dialog` do */
+    parentContext: CompositionContext? = null,
+    /** Called for the back button when no back handler of the content is enabled */
+    private val onBackFallback: (() -> Unit)? = null,
     private val content: @Composable () -> Unit,
 ) : AbstractComposeView(context, null, 0), SavedStateRegistryOwner {
-    // compose
-    override var shouldCreateCompositionOnAttachedToWindow: Boolean = true
+
+    /** Called when the device configuration changes (rotation, folding, ...) */
+    var onConfigChanged: (() -> Unit)? = null
 
     @Composable
     override fun Content() {
         content()
-        if (isAttachedToWindow) {
-            Log.i(ContentValues.TAG, "flyContent: showed")
-            createComposition()
-            (lifecycle as LifecycleRegistry).currentState = Lifecycle.State.RESUMED
-        }
     }
 
     //lifecycle
     override val savedStateRegistry: SavedStateRegistry
         get() = savedStateRegistryController.savedStateRegistry
 
-    private var lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
+    private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle = lifecycleRegistry
 
-    private var savedStateRegistryController: SavedStateRegistryController =
+    private val savedStateRegistryController: SavedStateRegistryController =
         SavedStateRegistryController.create(this)
 
     private val onBackPressedDispatcherOwner = object : OnBackPressedDispatcherOwner {
-        override val onBackPressedDispatcher = OnBackPressedDispatcher()
+        override val onBackPressedDispatcher = OnBackPressedDispatcher(Runnable { onBackFallback?.invoke() })
         override val lifecycle: Lifecycle
             get() = this@FlyView.lifecycle
     }
 
+    // One store for the whole life of the view, so `viewModel()` keeps its state.
+    private val store = ViewModelStore()
+
+    /** The lifecycle of this view, used by the overlay to observe the window */
+    internal val isDisposed: Boolean get() = disposed
+
+    private val recomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
+    private val recomposer = if (parentContext == null) Recomposer(AndroidUiDispatcher.CurrentThread) else null
+    private var disposed = false
+
     init {
-        val lifecycleOwner = this.apply {
-            savedStateRegistryController.performRestore(null)
-            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        }
-        setViewTreeLifecycleOwner(lifecycleOwner)
+        savedStateRegistryController.performRestore(null)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        setViewTreeLifecycleOwner(this)
         setViewTreeOnBackPressedDispatcherOwner(onBackPressedDispatcherOwner)
-        setViewTreeSavedStateRegistryOwner(lifecycleOwner)
+        setViewTreeSavedStateRegistryOwner(this)
         setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
-            override val viewModelStore: ViewModelStore
-                get() = ViewModelStore()
+            override val viewModelStore: ViewModelStore get() = store
         })
-        val recompose = Recomposer(AndroidUiDispatcher.CurrentThread)
-        compositionContext = recompose
-        runRecomposeScope.launch {
-            recompose.runRecomposeAndApplyChanges()
+        if (recomposer != null) {
+            compositionContext = recomposer
+            recomposeScope.launch {
+                recomposer.runRecomposeAndApplyChanges()
+            }
+        } else {
+            compositionContext = parentContext
         }
-       setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (!disposed) lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        onConfigChanged?.invoke()
+    }
+
+    /** Releases the composition, the recomposer and the view model store. Safe to call twice. */
+    fun dispose() {
+        if (disposed) return
+        disposed = true
+        disposeComposition()
+        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        recomposer?.cancel()
+        recomposeScope.cancel()
+        store.clear()
     }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
@@ -91,5 +127,4 @@ internal class FlyView(
         }
         return keyDispatcher?.invoke(event) ?: super.dispatchKeyEvent(event)
     }
-
 }

@@ -21,6 +21,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    // the bytecode level stays at 17 so apps that still build with JDK 17 can use the library
+    // (the build itself runs on JDK 21, see gradle/gradle-daemon-jvm.properties)
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -40,7 +42,11 @@ dependencies {
     implementation libs.androidx.compose.ui
     implementation libs.androidx.compose.foundation
     implementation libs.androidx.compose.foundation.layout
-    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.animation
+
+    testImplementation libs.junit
+    testImplementation libs.kotlin.test
+    testImplementation libs.kotlinx.coroutines.test
 }
 
 afterEvaluate {
