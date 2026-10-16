@@ -6,7 +6,7 @@ Show any composable **on top of other apps**. Draggable, snaps to the screen edg
 [flyView-demo.webm](https://github.com/aabadaa/FLyView/assets/54916786/79d6c4f2-6a83-4ac4-a44c-8e3f74d58dfa)
 
 
-**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Placement](#placement-size-keyboard) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
+**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Lifecycle](#window-lifecycle-shown-and-hidden) · [Placement](#placement-size-keyboard) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
 
 ## Install
 
@@ -141,6 +141,54 @@ FlyWindow("note", visible = !closed, onDismissRequest = { vm.close() }) {
 2. `onDismissRequest` commits it: update your state. Without it the window hides until it leaves the composition and comes back.
 
 Requests while one is running are ignored.
+
+## Window lifecycle (shown and hidden)
+
+A window has a real `LifecycleOwner`, and its content lives exactly while the window is on the screen. There are no `onShown`/`onHidden` callbacks, use the lifecycle:
+
+| Moment | Lifecycle of the window | Content |
+|---|---|---|
+| The window is added to the screen | `CREATED` → `STARTED` → `RESUMED` | composed |
+| Playing `exit` (`visible = false`) | `RESUMED` | still composed |
+| The window is removed, for any reason | `DESTROYED` | disposed |
+
+**Inside the content**, run something when it shows and undo it when it hides:
+
+```kotlin
+FlyWindow("player", visibleWhen = FlyVisibility.Foreground) {
+    DisposableEffect(Unit) {
+        player.resume()                       // the window just showed
+        onDispose { player.pause() }          // hidden for any reason: background, visible = false, overlay stopped...
+    }
+    // or with the lifecycle of the window (artifact androidx.lifecycle:lifecycle-runtime-compose)
+    LifecycleEventEffect(Lifecycle.Event.ON_DESTROY) { repo.saveProgress() }
+}
+```
+
+**From outside the window**, read the state of the window. It tells you if it is shown and why it is not:
+
+```kotlin
+val state = rememberFlyWindowState("player")
+
+Text(if (state.isShown) "Playing in the bubble" else "Hidden: ${state.hiddenReason}")
+
+LaunchedEffect(state) {
+    snapshotFlow { state.isShown }.collect { shown -> if (!shown) repo.saveProgress() }
+}
+```
+
+`hiddenReason` is `null` while the window is shown, otherwise one of:
+
+| `FlyHiddenReason` | |
+|---|---|
+| `Visibility` | a `visibleWhen` rule: the app or the owner is in the wrong state |
+| `Invisible` | `visible = false`, after its exit |
+| `Empty` | `hideWhenEmpty` and no item is contributed |
+| `Dismissed` | a dismissal was committed and nobody handled `onDismissRequest` |
+| `OverlayStopped` | the overlay stopped |
+| `LeftComposition` | the `FlyWindow` call left the composition |
+
+Good to know: the content is disposed when the window hides, so keep state in a ViewModel or a state holder. Nothing runs if the process is killed: `onClosingSoon` is the hint before, and `onRemoved` is only for `visible = false`.
 
 ## Placement, size, keyboard
 

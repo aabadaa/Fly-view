@@ -86,6 +86,27 @@ sealed interface FlySnap {
     data class Edges(val padding: Dp = 0.dp, val durationMillis: Long = 300) : FlySnap
 }
 
+/** Why a window is not on the screen */
+enum class FlyHiddenReason {
+    /** A `visibleWhen` rule: the app or the owner of the window is in the wrong state */
+    Visibility,
+
+    /** `visible = false`, after its exit */
+    Invisible,
+
+    /** `hideWhenEmpty` and no item is contributed */
+    Empty,
+
+    /** A dismissal was committed and nobody handled `onDismissRequest` */
+    Dismissed,
+
+    /** The overlay stopped */
+    OverlayStopped,
+
+    /** The `FlyWindow` call left the composition */
+    LeftComposition,
+}
+
 /** When a window or an item is shown */
 @Immutable
 sealed interface FlyVisibility {

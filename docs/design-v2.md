@@ -337,6 +337,13 @@ Decided: **window session scope** (option A). The state holder is created when t
 - Optional `FlyWindow(viewModelScope = FlyViewModelScope.Window)` (default) or `.Process` for a holder that survives dismissals until `FlyOverlay.stop()`. Not needed by the sample.
 - Pattern: create the holder inside the branch that is composed while the window is open, so leaving the branch ends the session.
 
+## Window lifecycle (shown and hidden)
+
+Instead of `onShown` / `onHidden` callbacks, a window uses what already existed:
+- The window's `FlyView` is a real `LifecycleOwner`: `CREATED` when it is created, `RESUMED` when it is added to the screen, `DESTROYED` when it is removed. Its content is composed only in between, so `DisposableEffect` or `LifecycleEventEffect` inside the content are the "shown" and "hidden" hooks.
+- For observers outside the window, `FlyWindowState` has `isShown` and `hiddenReason` (`FlyHiddenReason`: `Visibility`, `Invisible`, `Empty`, `Dismissed`, `OverlayStopped`, `LeftComposition`), both Compose state (`snapshotFlow` turns them into a flow).
+- `onClosingSoon` is the signal before, `hiddenReason` the explanation after, `onRemoved` only for `visible = false`.
+
 ## Process lifetime and the closing-soon signal
 
 Without a foreground service the process can be killed by Android while the app is in the background, and every window disappears with it. Document this clearly, and let the content warn the user.
@@ -441,6 +448,7 @@ Read from the app's on-fly module. What it needs that v2 must keep:
 | Removal callback | `FlyWindow(onRemoved)` runs once after the window has left, to reset app state |
 | Placement | `Floating`, `Docked(edge, size, margin, insets)`, `Fullscreen`, with `FlySize` and the `configure` escape hatch. `Anchored` and the bottom sheet come later |
 | Keyboard | A separate `ime = FlyIme.Ignore / Avoid` parameter, not part of `Docked` |
+| Shown / hidden | No callbacks: the window lifecycle and the composition give the hooks inside the content, `FlyWindowState.isShown` and `hiddenReason` give them outside |
 | Aggregation | Items contributed from any screen into a window, removable one by one, no feature lost vs v1 |
 | Hide on background | Opt-in with `visibleWhen = Foreground`. The default is `Always` for `contribute` windows (they float over other apps) and "while the screen is started" for windows a screen composes. Hidden windows are removed, their position is kept and restored on return |
 | Activity recreation | Nothing to reattach with the process owner. With an activity owner, a config change only hides the windows |

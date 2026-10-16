@@ -77,6 +77,10 @@ internal class FlyWindowRuntime(
     var hiddenByDismiss by mutableStateOf(false)
         private set
 
+    /** Why the composable does not want the window shown right now, set on every recomposition */
+    @Volatile
+    var hiddenReasonTarget: FlyHiddenReason? = null
+
     /** Whether the composable wants the window shown, set on every recomposition */
     @Volatile
     var shownTarget = false
@@ -149,6 +153,9 @@ internal class FlyWindowRuntime(
         state = newState
         newState.runtime = this
         if (isAttached) {
+            previous?.isShown = false
+            newState.isShown = true
+            newState.hiddenReason = null
             val target = newState.savedPosition()
             if (target != null) placeSaved(animated = previous != null) else initialPlacement()
         }
@@ -195,15 +202,23 @@ internal class FlyWindowRuntime(
             throw e
         }
         added = true
+        if (this::state.isInitialized) {
+            state.isShown = true
+            state.hiddenReason = null
+        }
         if (isFloating() && this::state.isInitialized) {
             if (state.savedPosition() != null) placeSaved(animated = false) else initialPlacement()
         }
     }
 
-    fun remove() {
+    fun remove(reason: FlyHiddenReason? = null) {
         val view = flyView ?: return
         flyView = null
         added = false
+        if (this::state.isInitialized) {
+            state.isShown = false
+            state.hiddenReason = reason ?: hiddenReasonTarget ?: FlyHiddenReason.Visibility
+        }
         animator?.cancel()
         if (dragging) endDragCleanup()
         try {
@@ -215,7 +230,7 @@ internal class FlyWindowRuntime(
     }
 
     fun release() {
-        remove()
+        remove(FlyHiddenReason.LeftComposition)
         if (this::state.isInitialized && state.runtime === this) state.runtime = null
     }
 

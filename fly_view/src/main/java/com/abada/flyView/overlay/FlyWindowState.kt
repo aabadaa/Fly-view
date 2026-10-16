@@ -30,6 +30,14 @@ class FlyWindowState internal constructor(
     var snappedSide: EdgeSide? by mutableStateOf(null)
         internal set
 
+    /** `true` while the window is on the screen. Observe it from anywhere, for example with `snapshotFlow`. */
+    var isShown: Boolean by mutableStateOf(false)
+        internal set
+
+    /** Why the window is not on the screen: `null` while it is shown or before it was ever shown */
+    var hiddenReason: FlyHiddenReason? by mutableStateOf(null)
+        internal set
+
     var isDragging: Boolean by mutableStateOf(false)
         internal set
 

@@ -211,6 +211,14 @@ fun FlyWindow(
         runtime.onKeyEvent = onKeyEvent
         runtime.onDismissCommit = if (currentDismiss != null) ({ currentDismiss?.invoke() }) else null
         runtime.shownTarget = shown
+        runtime.hiddenReasonTarget = when {
+            shown -> null
+            !visible -> FlyHiddenReason.Invisible
+            runtime.hiddenByDismiss -> FlyHiddenReason.Dismissed
+            !FlyOverlayHost.isRunning -> FlyHiddenReason.OverlayStopped
+            hideWhenEmpty && !hasItems -> FlyHiddenReason.Empty
+            else -> FlyHiddenReason.Visibility
+        }
         runtime.wantsToExist = visible && (!hideWhenEmpty || hasItems) && !runtime.hiddenByDismiss
         runtime.bind(state)
         runtime.update(WindowConfig(focusable, drag, snap, dismissZone, placement, ime))

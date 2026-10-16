@@ -129,7 +129,7 @@ internal object FlyOverlayHost {
         if (!isRunning) return
         windows.values().forEach { it.notifyClosing(ClosingReason.HostStopping) }
         isRunning = false
-        windows.values().forEach { it.remove() }
+        windows.values().forEach { it.remove(FlyHiddenReason.OverlayStopped) }
         DismissOverlay.hide()
         val view = hostView
         hostView = null
