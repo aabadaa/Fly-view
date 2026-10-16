@@ -3,8 +3,6 @@ package com.abada.flyView.overlay
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.PixelFormat
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
@@ -104,8 +102,6 @@ internal class FlyWindowRuntime(
     /** Alive: meant to exist, or still on screen playing its exit */
     val isAlive: Boolean get() = wantsToExist || isAttached
 
-    private val uiHandler = Handler(Looper.getMainLooper())
-
     lateinit var state: FlyWindowState
         private set
 
@@ -138,11 +134,10 @@ internal class FlyWindowRuntime(
         if (handler != null) {
             handler()
             // the owner may decide to keep the window: then a later request has to work again
-            uiHandler.postDelayed({ if (shownTarget) coordinator.reset() }, RESET_AFTER_COMMIT_MS)
+            coordinator.resetSoon { shownTarget }
         } else {
             hiddenByDismiss = true
         }
-        FlyOverlayHost.onWindowDismissCommitted(this)
     }
 
     /** The window shows again (the composable left and came back, or the owner handled the request) */
@@ -563,6 +558,5 @@ internal class FlyWindowRuntime(
 
     companion object {
         private const val TAG = "FlyWindow"
-        private const val RESET_AFTER_COMMIT_MS = 600L
     }
 }

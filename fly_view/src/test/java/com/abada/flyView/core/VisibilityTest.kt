@@ -89,12 +89,4 @@ class KeyedSlotsTest {
         assertEquals(listOf("b", "a"), slots.keys())
         assertEquals(listOf(1, 2), slots.values())
     }
-
-    @Test
-    fun itemsAreSortedByOrderThenInsertion() {
-        val items = listOf(
-            OrderedItem("c", 0, "C"), OrderedItem("a", 5, "A"), OrderedItem("b", 0, "B"),
-        )
-        assertEquals(listOf("c", "b", "a"), items.inDisplayOrder().map { it.id })
-    }
 }

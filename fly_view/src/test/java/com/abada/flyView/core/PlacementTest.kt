@@ -25,7 +25,6 @@ class PlacementTest {
         assertEquals(Dim.Wrap, f.height)
         assertEquals(0, f.x)
         assertEquals(0, f.y)
-        assertFalse(f.movable)
         assertFalse(f.ignoreInsets)
     }
 
@@ -56,7 +55,6 @@ class PlacementTest {
         assertEquals(Dim.Match, f.width)
         assertEquals(Dim.Match, f.height)
         assertTrue(f.ignoreInsets)
-        assertFalse(f.movable)
     }
 
     @Test

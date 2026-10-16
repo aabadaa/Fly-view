@@ -38,8 +38,3 @@ class KeyedSlots<K, V> {
     fun values(): List<V> = slots.values.map { it.value }
     val size: Int get() = slots.size
 }
-
-/** An item contributed to a window, [order] sorts first, then the insertion order */
-data class OrderedItem<T>(val id: String, val order: Int, val value: T)
-
-fun <T> List<OrderedItem<T>>.inDisplayOrder(): List<OrderedItem<T>> = sortedBy { it.order }

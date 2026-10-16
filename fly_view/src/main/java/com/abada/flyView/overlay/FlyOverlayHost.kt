@@ -197,10 +197,6 @@ internal object FlyOverlayHost {
     fun window(key: String): FlyWindowRuntime? = windows[key]
     fun allWindows(): List<FlyWindowRuntime> = windows.values()
 
-    fun onWindowDismissCommitted(runtime: FlyWindowRuntime) {
-        // nothing to do for the host, the window hides itself when nobody handles the request
-    }
-
     // items
 
     fun registerItem(entry: FlyItemEntry): Long {

@@ -39,8 +39,6 @@ data class FrameSpec(
     val height: Dim,
     val x: Int,
     val y: Int,
-    /** `true` when the position is free, so drag and snap apply */
-    val movable: Boolean,
     /** `true` when the window covers the system bars area too */
     val ignoreInsets: Boolean,
 )
@@ -59,11 +57,11 @@ object PlacementResolver {
         usable: FlyRect,
     ): FrameSpec = when (placement) {
         PlacementSpec.Floating -> FrameSpec(
-            floatingH, floatingV, Dim.Wrap, Dim.Wrap, floating.x, floating.y, movable = true, ignoreInsets = false
+            floatingH, floatingV, Dim.Wrap, Dim.Wrap, floating.x, floating.y, ignoreInsets = false
         )
 
         PlacementSpec.Fullscreen -> FrameSpec(
-            HAnchor.Start, VAnchor.Top, Dim.Match, Dim.Match, 0, 0, movable = false, ignoreInsets = true
+            HAnchor.Start, VAnchor.Top, Dim.Match, Dim.Match, 0, 0, ignoreInsets = true
         )
 
         is PlacementSpec.Docked -> {
@@ -92,7 +90,6 @@ object PlacementResolver {
                 height = if (horizontalEdge) Dim.Wrap else along,
                 x = if (horizontalEdge) 0 else placement.margin,
                 y = if (horizontalEdge) placement.margin else 0,
-                movable = false,
                 ignoreInsets = !placement.respectInsets,
             )
         }

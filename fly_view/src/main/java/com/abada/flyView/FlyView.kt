@@ -72,9 +72,6 @@ internal class FlyView(
     // One store for the whole life of the view, so `viewModel()` keeps its state.
     private val store = ViewModelStore()
 
-    /** The lifecycle of this view, used by the overlay to observe the window */
-    internal val isDisposed: Boolean get() = disposed
-
     private val recomposeScope = CoroutineScope(AndroidUiDispatcher.CurrentThread)
     private val recomposer = if (parentContext == null) Recomposer(AndroidUiDispatcher.CurrentThread) else null
     private var disposed = false

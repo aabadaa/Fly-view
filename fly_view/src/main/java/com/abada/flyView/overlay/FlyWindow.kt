@@ -116,7 +116,7 @@ internal class FlyItemEntry(
             if (handler != null) {
                 handler()
                 // the owner may decide to keep the item: then a later request has to work again
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ coordinator.reset() }, 600)
+                coordinator.resetSoon()
             } else {
                 hiddenByDismiss = true
             }
