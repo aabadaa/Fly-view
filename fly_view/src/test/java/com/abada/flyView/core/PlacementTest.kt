@@ -12,9 +12,9 @@ class PlacementTest {
         PlacementResolver.resolve(p, FlyPoint(7, 9), HAnchor.Center, VAnchor.Center, usable)
 
     @Test
-    fun floatingKeepsThePositionAndIsMovable() {
+    fun floatingKeepsThePosition() {
         val f = resolve(PlacementSpec.Floating)
-        assertEquals(FrameSpec(HAnchor.Center, VAnchor.Center, Dim.Wrap, Dim.Wrap, 7, 9, true, false), f)
+        assertEquals(FrameSpec(HAnchor.Center, VAnchor.Center, Dim.Wrap, Dim.Wrap, 7, 9, false), f)
     }
 
     @Test

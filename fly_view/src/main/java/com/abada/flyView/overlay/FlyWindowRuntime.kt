@@ -122,7 +122,7 @@ internal class FlyWindowRuntime(
 
     val isAttached: Boolean get() = flyView != null
 
-    val coordinator = DismissCoordinator(
+    val coordinator: DismissCoordinator = DismissCoordinator(
         scope = scope,
         commit = { reason -> commitDismiss(reason) },
         onCancelled = { settle(FlyVelocity(), animated = true) },

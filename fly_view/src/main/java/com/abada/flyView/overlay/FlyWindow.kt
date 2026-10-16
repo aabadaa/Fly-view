@@ -32,6 +32,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.abada.flyView.DismissZone
+import com.abada.flyView.core.ClosingReason
 import com.abada.flyView.core.DismissCoordinator
 import com.abada.flyView.core.DismissReason
 import com.abada.flyView.core.FlyOverlayNotStartedException
@@ -109,7 +110,7 @@ internal class FlyItemEntry(
     var hiddenByDismiss by mutableStateOf(false)
     val isShown: Boolean get() = allowed && !hiddenByDismiss
 
-    val coordinator = DismissCoordinator(
+    val coordinator: DismissCoordinator = DismissCoordinator(
         scope = scope,
         commit = {
             val handler = onDismissRequest()
@@ -194,7 +195,7 @@ fun FlyWindow(
     val currentDismiss by rememberUpdatedState(onDismissRequest)
     val transition = remember(runtime) { MutableTransitionState(false) }
 
-    val allowed = rememberVisibilityAllowed(visibleWhen) { runtime.notifyClosing(FlyClosingReason.OwnerStopping) }
+    val allowed = rememberVisibilityAllowed(visibleWhen) { runtime.notifyClosing(ClosingReason.OwnerStopping) }
     val hasItems = windowScope.items.isNotEmpty()
     val shown = visible && allowed && FlyOverlayHost.isRunning &&
             (!hideWhenEmpty || hasItems) && !runtime.hiddenByDismiss
