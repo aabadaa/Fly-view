@@ -1,8 +1,6 @@
 package com.abada.flyView
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -10,7 +8,6 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.WindowManager
-import androidx.core.app.NotificationCompat
 import com.abada.flyView.windowManagerUtils.addFlyInfo
 import com.abada.flyView.windowManagerUtils.removeFlyView
 
@@ -43,25 +40,12 @@ abstract class FlyViewService : Service() {
     protected open val notificationId: Int get() = 1
 
     /** The notification shown while a view is showing. Override it to use your own. */
-    protected open fun createNotification(): Notification {
-        val label = applicationInfo.loadLabel(packageManager)
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(applicationInfo.icon.takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info)
-            .setContentTitle(label)
-            .setContentText("Showing a floating window")
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
+    protected open fun createNotification(): Notification = FlyNotifications.build(this, CHANNEL_ID)
 
     override fun onCreate() {
         super.onCreate()
         wm = applicationContext.getSystemService(WINDOW_SERVICE) as WindowManager
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Floating windows", NotificationManager.IMPORTANCE_LOW)
-        )
+        FlyNotifications.createChannel(this, CHANNEL_ID)
     }
 
     /**

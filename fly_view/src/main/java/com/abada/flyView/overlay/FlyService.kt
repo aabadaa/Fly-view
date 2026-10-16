@@ -1,13 +1,10 @@
 package com.abada.flyView.overlay
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import androidx.core.app.NotificationCompat
+import com.abada.flyView.FlyNotifications
 
 /**
  * Keeps the process alive while windows show: a foreground service with a notification.
@@ -29,27 +26,15 @@ import androidx.core.app.NotificationCompat
  * ```
  */
 abstract class FlyService : Service() {
-    /** The id of the foreground notification */
-    protected open val notificationId: Int get() = 1
+    /** The id of the foreground notification, different from the one of the classic `FlyViewService` */
+    protected open val notificationId: Int get() = 2
 
     /** The notification shown while the overlay runs. Override it to use your own. */
-    protected open fun createNotification(): Notification {
-        val label = applicationInfo.loadLabel(packageManager)
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(applicationInfo.icon.takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info)
-            .setContentTitle(label)
-            .setContentText("Showing a floating window")
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
+    protected open fun createNotification(): Notification = FlyNotifications.build(this, CHANNEL_ID)
 
     override fun onCreate() {
         super.onCreate()
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Floating windows", NotificationManager.IMPORTANCE_LOW)
-        )
+        FlyNotifications.createChannel(this, CHANNEL_ID)
         FlyOverlayHost.attachService(this)
     }
 
