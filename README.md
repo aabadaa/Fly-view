@@ -3,7 +3,9 @@
 Show any composable **on top of other apps**. Draggable, snaps to the screen edges, drop it at the bottom to close it, aggregates what your screens contribute, and optionally stays alive in a foreground service.
 
 ## Demo
-[flyView-demo.webm](https://github.com/aabadaa/FLyView/assets/54916786/79d6c4f2-6a83-4ac4-a44c-8e3f74d58dfa)
+![Fly-view demo](docs/demo.gif)
+
+_Animated illustration of the sample app (not a screen recording) · [full quality: docs/demo.mp4](docs/demo.mp4)_
 
 
 **Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Lifecycle](#window-lifecycle-shown-and-hidden) · [Placement](#placement-size-keyboard) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
@@ -23,37 +25,45 @@ Needs the user to allow **"Draw over other apps"**: you ask for it, the library 
 
 ## Quick start
 
-**1. Describe your windows, once** (for example in `Application.onCreate`). The block is composed while the overlay runs, in the process and not in an activity.
+A floating counter that shows the same number as your screen. This is the [sample app](app/src/main/java/com/abada/flyview).
+
+**1. Your state**, nothing special: any flow, state holder or ViewModel.
 
 ```kotlin
-FlyOverlay.contribute("player") {
-    val open by PlayerState.isOpen.collectAsState()      // your own app state
+object CounterState {
+    val count = MutableStateFlow(0)
+    val isOpen = MutableStateFlow(false)
+}
+```
+
+**2. Describe the window, once** (for example in `Application.onCreate`). The block is composed while the overlay runs, in the process and not in an activity.
+
+```kotlin
+FlyOverlay.contribute("counter") {
+    val open by CounterState.isOpen.collectAsState()
     if (open) {
-        FlyWindow(
-            "player",
-            onDismissRequest = { PlayerState.isOpen.value = false },
-        ) {
-            Column(Modifier.background(Color.White)) {
-                Text("Now playing")
-                Button(onClick = ::dismiss) { Text("Close") }
+        FlyWindow("counter", onDismissRequest = { CounterState.isOpen.value = false }) {
+            val count by CounterState.count.collectAsState()
+            Row {
+                Text("$count")
+                Button(onClick = { CounterState.count.update { it + 1 } }) { Text("+") }
+                Button(onClick = { dismiss() }) { Text("×") }
             }
         }
     }
 }
 ```
 
-**2. Start the overlay** (permission first, `start` throws if it is missing)
+**3. Start it** (permission first, `start` throws if it is missing)
 
 ```kotlin
 if (FlyOverlay.hasPermission(context) || FlyOverlay.requestPermission(activity)) {   // requestPermission is suspend
-    PlayerState.isOpen.value = true
+    CounterState.isOpen.value = true
     FlyOverlay.start(context)
 }
 ```
 
-That is all. The overlay stops itself when its last window is gone, the next `start` composes your blocks again.
-
-Full sample: [`app`](app/src/main/java/com/abada/flyview) (a bubble that expands into a panel, and a window that aggregates items from a screen).
+That is all: the window floats over other apps, can be dragged (it snaps to the closest edge), and can be dropped on the bottom to close it. Your screen reads `CounterState.count` too, so both always show the same number. The overlay stops itself when its last window is gone, the next `start` composes your blocks again.
 
 ## Cheat sheet
 
@@ -168,9 +178,9 @@ FlyWindow("player", visibleWhen = FlyVisibility.Foreground) {
 **From outside the window**, read the state of the window. It tells you if it is shown and why it is not:
 
 ```kotlin
-val state = rememberFlyWindowState("player")
+val state = rememberFlyWindowState("counter")
 
-Text(if (state.isShown) "Playing in the bubble" else "Hidden: ${state.hiddenReason}")
+Text(if (state.isShown) "The counter is floating" else "Hidden: ${state.hiddenReason}")
 
 LaunchedEffect(state) {
     snapshotFlow { state.isShown }.collect { shown -> if (!shown) repo.saveProgress() }
@@ -226,7 +236,7 @@ FlyOverlay.configure(service = MyFlyService::class.java)
 - `FlyOverlay.start` throws `OverlayPermissionException` if the permission is missing and `FlyServiceStartException` if the system refuses the service (from the background on Android 12+). Start from a visible activity, `FlyLaunchActivity` is an invisible one for widgets, tiles and notification actions.
 - **Closing soon:** the window content gets `closingSoon` (a state) and `onClosingSoon`: `ProcessAtRisk` when the system is short on memory and no service runs, `OwnerStopping`, `HostStopping`. It is a hint, a kill can come without warning. `FlyOverlay.lastExitReason(context)` tells why the previous process ended (Android 11+).
 - State holders: `rememberFlyViewModel { }` lives for the window session. Do work that must finish after the window is gone inside `FlyDismissEffect`, before `dismiss()`.
-- Requests from outside (a tile, a receiver) go through a `Channel` and `send` (not a `SharedFlow`, which drops values when nobody listens yet): see `BubbleEntry` in the sample.
+- Requests from outside (a tile, a receiver) go through a `Channel` and `send` (not a `SharedFlow`, which drops values when nobody listens yet).
 
 ## Testing
 

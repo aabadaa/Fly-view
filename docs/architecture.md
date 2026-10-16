@@ -17,7 +17,7 @@ The windows are composed like `Popup` and `Dialog` are, as sub-compositions of t
 
 ```
 Overlay host (a 1x1 window, composes the FlyOverlay.contribute blocks)
- ├─ contribute block "bubble"   -> FlyWindow "bubble"  -> small window, own ComposeView
+ ├─ contribute block "counter"  -> FlyWindow "counter" -> small window, own ComposeView
  └─ contribute block "tools"    -> FlyWindow "tools"   -> small window, own ComposeView
 Screen (an activity)            -> FlyWindow / FlyItem -> composed in the screen, the window is added to the host
 ```

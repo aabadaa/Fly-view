@@ -2,9 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
-
     <application
         android:name="com.abada.flyview.FlyApp"
         android:allowBackup="false"
@@ -24,26 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-
-
-        <!-- the invisible trampoline that starts the overlay from a visible context -->
-        <activity
-            android:name="com.abada.flyview.LaunchActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
-        <!-- keeps the process alive while windows show -->
-        <service
-            android:name="com.abada.flyview.ExampleFlyService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="shows a floating window" />
-        </service>
 
     </application>
 

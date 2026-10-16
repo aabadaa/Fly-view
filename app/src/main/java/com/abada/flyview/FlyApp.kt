@@ -8,13 +8,10 @@ import com.abada.flyView.overlay.FlyOverlay
 class FlyApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        FlyOverlay.configure(service = ExampleFlyService::class.java)   // optional keep-alive
-
         // composed by the overlay while it runs, in the process and not in an activity
-        FlyOverlay.contribute("bubble") {
-            val open by BubbleEntry.isOpen.collectAsState()
-            if (open) BubbleWindow()
+        FlyOverlay.contribute("counter") {
+            val open by CounterState.isOpen.collectAsState()
+            if (open) CounterWindow()
         }
-        FlyOverlay.contribute("tools") { ToolsWindow() }
     }
 }
