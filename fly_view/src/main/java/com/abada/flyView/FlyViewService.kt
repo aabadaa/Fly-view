@@ -83,6 +83,8 @@ abstract class FlyViewService : Service() {
             return START_NOT_STICKY
         }
         if (extras != null && !extras.isEmpty) FlyViews.update(key, extras)
+        // the view may belong to someone else (added directly): then this service owns nothing
+        stopIfIdle()
         return START_NOT_STICKY
     }
 
