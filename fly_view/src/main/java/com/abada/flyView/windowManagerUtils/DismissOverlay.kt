@@ -18,7 +18,7 @@ import kotlin.math.roundToInt
 internal object DismissOverlay {
     private var view: FlyView? = null
     private var windowManager: WindowManager? = null
-    private var hovered by mutableStateOf(false)
+    private var hoverState by mutableStateOf(false)
 
     fun show(context: Context, windowManager: WindowManager, zone: DismissZone) {
         if (view != null) return
@@ -35,15 +35,15 @@ internal object DismissOverlay {
             it.gravity = Gravity.BOTTOM
             it.windowAnimations = android.R.style.Animation_Toast
         }
-        hovered = false
-        val overlay = FlyView(context) { closeViewContent(hovered) }
+        hoverState = false
+        val overlay = FlyView(context) { closeViewContent(hoverState) }
         windowManager.addView(overlay, params)
         view = overlay
         this.windowManager = windowManager
     }
 
     fun setHovered(value: Boolean) {
-        hovered = value
+        hoverState = value
     }
 
     fun hide() {
@@ -56,6 +56,6 @@ internal object DismissOverlay {
         }
         windowManager = null
         overlay.dispose()
-        hovered = false
+        hoverState = false
     }
 }
