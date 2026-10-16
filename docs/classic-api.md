@@ -157,3 +157,11 @@ Unreleased changes (a higher level, compose based API is planned for the next ma
 | `FlyViewInfo` data class (`copy`) | plain class |
 | material3 pulled in by the library | not anymore |
 
+## Changes from the first release
+
+The classic API keeps its concepts, but a few signatures changed, so code written against 1.x may need a small edit:
+
+- `closeViewContent` is now `@Composable (isHovered: Boolean) -> Unit`, so the drop area can react while the view is over it. Add the parameter to your lambda (`{ _ -> ... }` if you ignore it).
+- `FlyViewInfo` is a plain class, not a data class: there is no `copy(...)`. Create a new `FlyViewInfo` in your provider instead.
+- `FlyViewInfo` has two new constructor parameters, `dismissZone` and `focusable`, before `content`. Passing `content` as the trailing lambda is not affected.
+- `addFlyInfo` returns a `Boolean`: `false` when the permission is missing (the settings screen is opened) or the key is already shown.

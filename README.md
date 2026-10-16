@@ -19,7 +19,7 @@ implementation 'com.github.aabadaa:Fly-view:Tag'
 ```
 [![](https://jitpack.io/v/aabadaa/Fly-view.svg)](https://jitpack.io/#aabadaa/Fly-view)
 
-Needs the user to allow **"Draw over other apps"**: you ask for it, the library never opens settings behind your back.
+Needs the user to allow **"Draw over other apps"**: with the overlay API you ask for it and the library never opens settings behind your back (the classic `FlyViews.show` does open the settings screen when the permission is missing).
 
 ## Quick start
 
@@ -212,7 +212,7 @@ The math and the state machines have no Android dependency and run as plain JVM 
 
 ## Classic API (1.x)
 
-The first API (`FlyViews`, `FlyViewInfo`, `DraggableFlyView`) keeps working: [docs/classic-api.md](docs/classic-api.md).
+The first API (`FlyViews`, `FlyViewInfo`, `DraggableFlyView`) keeps working, with a few source-level changes listed in [docs/classic-api.md](docs/classic-api.md#changes-from-the-first-release).
 
 The design notes behind the new API: [docs/design-v2.md](docs/design-v2.md).
 
