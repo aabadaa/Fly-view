@@ -1,4 +1,4 @@
-package com.abada.flyview.v2
+package com.abada.flyview
 
 import com.abada.flyView.overlay.FlyService
 

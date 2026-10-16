@@ -1,4 +1,4 @@
-package com.abada.flyView
+package com.abada.flyView.overlay
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -6,7 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import androidx.core.app.NotificationCompat
 
-/** The default foreground notification, shared by [FlyViewService] and the overlay's `FlyService` */
+/** The default foreground notification, used by the overlay's `FlyService` */
 internal object FlyNotifications {
     fun createChannel(service: Service, channelId: String) {
         val manager = service.getSystemService(Service.NOTIFICATION_SERVICE) as NotificationManager

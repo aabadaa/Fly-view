@@ -20,7 +20,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.abada.flyView.FlyView
 import com.abada.flyView.core.FlyOverlayNotStartedException
 
 /**

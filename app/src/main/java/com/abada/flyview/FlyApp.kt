@@ -1,4 +1,4 @@
-package com.abada.flyview.v2
+package com.abada.flyview
 
 import android.app.Application
 import androidx.compose.runtime.collectAsState

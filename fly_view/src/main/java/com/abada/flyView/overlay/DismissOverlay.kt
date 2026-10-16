@@ -1,4 +1,4 @@
-package com.abada.flyView.windowManagerUtils
+package com.abada.flyView.overlay
 
 import android.content.Context
 import android.graphics.PixelFormat
@@ -7,8 +7,6 @@ import android.view.WindowManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.abada.flyView.DismissZone
-import com.abada.flyView.FlyView
 import kotlin.math.roundToInt
 
 /**
@@ -36,7 +34,7 @@ internal object DismissOverlay {
             it.windowAnimations = android.R.style.Animation_Toast
         }
         hoverState = false
-        val overlay = FlyView(context) { closeViewContent(hoverState) }
+        val overlay = FlyView(context) { FlyOverlay.dismissZoneContent(hoverState) }
         windowManager.addView(overlay, params)
         view = overlay
         this.windowManager = windowManager

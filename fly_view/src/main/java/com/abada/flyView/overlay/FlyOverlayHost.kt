@@ -22,13 +22,11 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.abada.flyView.FlyView
 import com.abada.flyView.core.ClosingPolicy
 import com.abada.flyView.core.ClosingReason
 import com.abada.flyView.core.DismissCoordinator
 import com.abada.flyView.core.DismissReason
 import com.abada.flyView.core.KeyedSlots
-import com.abada.flyView.windowManagerUtils.DismissOverlay
 
 /** `true` inside the blocks of `FlyOverlay.contribute`, which live in the process and not in an activity */
 internal val LocalFlyHostBlock = staticCompositionLocalOf { false }

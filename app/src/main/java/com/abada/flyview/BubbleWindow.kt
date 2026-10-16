@@ -1,4 +1,4 @@
-package com.abada.flyview.v2
+package com.abada.flyview
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -22,7 +22,6 @@ import com.abada.flyView.overlay.FlyIme
 import com.abada.flyView.overlay.FlyPosition
 import com.abada.flyView.overlay.FlySide
 import com.abada.flyView.overlay.FlySnap
-import com.abada.flyView.overlay.FlyVisibility
 import com.abada.flyView.overlay.FlyWindow
 import com.abada.flyView.overlay.flyDragHandle
 import com.abada.flyView.overlay.rememberFlyViewModel
@@ -43,7 +42,6 @@ fun BubbleWindow() {
     FlyWindow(
         key = "bubble",
         state = if (vm.expanded) panelState else bubbleState,
-        visibleWhen = FlyVisibility.Always,                              // float over other apps, not only in ours
         visible = !vm.closed,                                            // false plays the exit
         focusable = vm.expanded,                                         // text field and back button
         drag = if (vm.expanded) FlyDrag.HandleOnly else FlyDrag.Whole,

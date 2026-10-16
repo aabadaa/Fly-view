@@ -89,7 +89,10 @@ sealed interface FlySnap {
 /** When a window or an item is shown */
 @Immutable
 sealed interface FlyVisibility {
-    /** The owner of the caller: its activity or fragment, or the foreground of the app for a `contribute` block */
+    /**
+     * A window that a screen composes: while that screen's activity or fragment is started.
+     * A window of a `FlyOverlay.contribute` block: always, so it floats over other apps.
+     */
     data object Default : FlyVisibility
 
     /** Until it is removed */
@@ -117,6 +120,20 @@ sealed interface FlyPosition {
     /** The first time, it starts where [state] is. Later it keeps its own position. */
     data class InheritFrom(val state: FlyWindowState) : FlyPosition
 }
+
+/**
+ * The area at the bottom of the screen where a dragged window is dismissed.
+ * While the user drags a window a drop area (see `FlyOverlay.dismissZoneContent`) is shown in it,
+ * releasing the window while its center is inside the area asks to dismiss it.
+ *
+ * @property heightFraction The height of the area as a fraction of the screen height
+ * @property hapticFeedback Vibrate a little when the window enters the area
+ */
+@Immutable
+data class DismissZone(
+    val heightFraction: Float = 0.18f,
+    val hapticFeedback: Boolean = true,
+)
 
 @Immutable
 data class FlyDialogProperties(

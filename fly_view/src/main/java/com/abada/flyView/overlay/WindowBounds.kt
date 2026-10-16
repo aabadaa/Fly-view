@@ -1,4 +1,4 @@
-package com.abada.flyView.windowManagerUtils
+package com.abada.flyView.overlay
 
 import android.content.Context
 import android.graphics.Rect
@@ -6,15 +6,10 @@ import android.os.Build
 import android.view.Gravity
 import android.view.WindowInsets
 import android.view.WindowManager
-import com.abada.flyView.FlyController
-import com.abada.flyView.FlyViewInfo
 import com.abada.flyView.core.AnchoredPosition
 import com.abada.flyView.core.FlyRect
 import com.abada.flyView.core.HAnchor
 import com.abada.flyView.core.VAnchor
-
-/** The views that are showing now, by key. Main thread only. */
-internal val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
 
 /** The whole display, including the system bars. */
 internal fun WindowManager.displayBounds(context: Context): Rect =

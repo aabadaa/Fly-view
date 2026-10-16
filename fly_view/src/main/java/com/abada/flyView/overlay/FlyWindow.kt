@@ -31,7 +31,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
-import com.abada.flyView.DismissZone
 import com.abada.flyView.core.ClosingReason
 import com.abada.flyView.core.DismissCoordinator
 import com.abada.flyView.core.DismissReason
@@ -141,8 +140,9 @@ internal class FlyItemEntry(
  *
  * @param key identifies the window
  * @param state the position of the window, one per mode if it remembers a position for each of them
- * @param visibleWhen when it is shown, by default as long as the owner of the caller (its activity or
- * fragment) is started, or while the app is in the foreground for a `FlyOverlay.contribute` block
+ * @param visibleWhen when it is shown. By default a window that a screen composes is shown while that
+ * screen's activity or fragment is started, and a window of a `FlyOverlay.contribute` block is always shown
+ * (it floats over other apps). Use `Foreground` or `Background` to follow the app instead.
  * @param focusable `true` if the window takes the focus: needed for text fields and the back button,
  * and it takes the back button and the keyboard from the app below. `false` for a display only widget.
  * @param drag which part of the window drags it
@@ -329,7 +329,11 @@ private fun rememberVisibilityAllowed(rule: FlyVisibility, onOwnerStopping: () -
         FlyVisibility.Always -> Visibility.Always
         FlyVisibility.Foreground -> Visibility.Foreground
         FlyVisibility.Background -> Visibility.Background
-        FlyVisibility.Default -> if (owner != null) Visibility.Owner(owner, min) else Visibility.Foreground
+        FlyVisibility.Default -> when {
+            owner != null -> Visibility.Owner(owner, min)
+            isHostBlock -> Visibility.Always // a `contribute` block floats over other apps
+            else -> Visibility.Foreground
+        }
         is FlyVisibility.Owner -> Visibility.Owner(rule.owner, min)
     }
     val conditions = VisibilityConditions(

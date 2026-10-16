@@ -1,6 +1,6 @@
 # Fly-view v2 design (draft)
 
-Status: draft for discussion, nothing here is implemented. 1.x keeps working until v2 is ready.
+Status: implemented in the `core` and `overlay` packages (see Implementation notes). The 1.x API was removed, see [migration-v1-to-v2.md](migration-v1-to-v2.md).
 
 ## Goal
 
@@ -34,7 +34,7 @@ Host composition (one Recomposer, one lifecycle, one saved-state registry)
  └─ FlyEffects          -> shared window for the dismiss zone (only while dragging)
 ```
 
-Why it is better than 1.x:
+Why it is better than v1:
 - One Recomposer instead of one per view, `CompositionLocal`s flow into every window.
 - A window exists exactly as long as its `FlyWindow` is in the composition. No registry, no `removeView`, no `onRemove` delay hack: leaving the composition (or `AnimatedVisibility`) is the exit.
 - Dismiss zone, magnet and any cross-view effect read the same `FlyWindowState`.
@@ -43,7 +43,7 @@ Why it is better than 1.x:
 
 | Piece | Role | Notes |
 |---|---|---|
-| `FlyOverlay` | Process-level host. Takes the application context, never an activity | `contribute(id) { }` (declarative block, returns a handle, several allowed), `configure(service)`, `stop()`. `show/hide` by key only in the 1.x adapter |
+| `FlyOverlay` | Process-level host. Takes the application context, never an activity | `contribute(id) { }` (declarative block, returns a handle, several allowed), `configure(service)`, `stop()` |
 | `FlyWindow(key, visible, visibleWhen, state, hideWhenEmpty, onDismissRequest, content: (items) -> Unit)` | One window while the call is in the composition. Its content lays out the items contributed to it | `DisposableEffect` registers/unregisters, content composed with the caller's `rememberCompositionContext()` (same trick as `Popup`) |
 | `FlyItem(window, id, order, onDismissRequest) { }` | A contribution to a window, from any screen or module | Same key `(window, id)` replaces the old content. The dismiss button is drawn by the content and calls `item.dismiss()` |
 | `FlyDialog(onDismissRequest, properties, anchor) { }` | Modal on our own overlay window, no activity token needed | Dims the screen, takes focus, back and outside tap call `onDismissRequest`. Composed in the caller's composition. Added after the windows so it is on top |
@@ -51,7 +51,6 @@ Why it is better than 1.x:
 | `FlyWindowState` | Position, size, `isDragging`, `isOverDismissZone`, `animateTo`, `snapToEdge` | `rememberFlyWindowState(key)` can persist the position |
 | `SnapPolicy` | Pure functions: snap target, clamp, fling projection, dismiss hit-test | No Android classes, unit tested |
 | `FlyEffects` | The dismiss zone content | Replaces the `closeViewContent` global |
-| 1.x adapter | `FlyViews.register/show/hide/withController` on top of the above | Keeps old apps compiling |
 
 ## Multiple contents (aggregation, scopes, visibility)
 
@@ -70,7 +69,7 @@ The host keeps `SnapshotStateMap<key, FlyEntry>` and, per window, a list of item
 | Dedicated per activity | default owner of a window/item is the caller's `LocalLifecycleOwner` (activity or fragment) |
 | Foreground / background | `visibleWhen = Foreground / Background / Always` per window or item |
 | Process-level, no activity (tile, receiver, service) | the entry point sets app-owned state, a `FlyOverlay.contribute(id) { }` block reads it. Several blocks coexist, so each feature module adds its own |
-| Imperative `show/hide` by key | only the 1.x adapter, implemented as a `contribute` block over a map |
+| Imperative `show/hide` by key | removed: your state decides, or `FlyOverlay.requestDismiss` |
 
 Rules:
 - Different keys coexist. Same key (window, or item in a window) is updated in place, the window and its position are kept.
@@ -90,11 +89,10 @@ Every way of removing a view is a **request**. It first goes to the view's own `
 | Back button (focusable window) | same request |
 | Other Compose code | changes the state that decides whether it is composed |
 | Non-Compose code (tile, notification action, receiver, service) | `FlyOverlay.requestDismiss(window)`, `requestDismiss(window, itemId)`, `requestDismissAll()`. They return `true` if the entry exists |
-| 1.x adapter | `FlyViews.hide(key)` = `requestDismiss(key)` |
 
 A request to an entry without `onDismissRequest` hides it (the entry stays registered) until the contributor leaves and re-enters the composition.
 
-Exit animations: `FlyWindow(visible = state)`. The window stays until its exit animation finishes, then it is removed. This replaces the `onRemove` + delay hack of 1.x.
+Exit animations: `FlyWindow(visible = state)`. The window stays until its exit animation finishes, then it is removed. This replaces the `onRemove` + delay hack of v1.
 
 ### `FlyDismissEffect`: the flyview controls its own dismissal
 
@@ -131,9 +129,9 @@ Rules:
 - No effect registered: the request goes straight to step 2.
 - No `onDismissRequest` either: the library hides the entry until the contributor leaves and re-enters the composition (see above).
 - An item has its own effect, so `requestDismiss(window, itemId)` runs the item's effect, and `requestDismissAll()` runs every entry's.
-- 1.x equivalent: `onRemove` (runs while the view is still shown) plus the 100 ms delay.
+- v1 equivalent: `onRemove` (runs while the view is still shown) plus the 100 ms delay.
 
-## Lifecycle rules (the part 1.x leaves unclear)
+## Lifecycle rules (the part v1 left unclear)
 
 The window needs a context only to be created. It lives in the system window manager and depends on the **process**, not on an activity or a service. So the host takes the application context, and *when windows are visible* is a separate, explicit decision: the **owner**.
 
@@ -197,8 +195,8 @@ FlyWindow("note", state = if (extended) editorState else iconState) { ... }
 |---|---|
 | `FlyWindow(drag = FlyDrag.Whole / HandleOnly / None)` | `Whole`: a drag anywhere moves the window (children that consume the gesture win, like buttons and scrolling). `HandleOnly`: only `Modifier.flyDragHandle()` areas drag. Replaces `DraggableFlyView` |
 | `Modifier.flyDragHandle()` | makes an area drag the whole window |
-| `FlyWindow(snap = FlySnap.Edges(padding, duration, fling = true) / FlySnap.None)` | replaces `autoGoToBorder`, `edgePadding` and `duration` of 1.x |
-| `FlyWindow(dismissZone = DismissZone() / null)` | the drag-to-dismiss area, same as in 1.x |
+| `FlyWindow(snap = FlySnap.Edges(padding, duration, fling = true) / FlySnap.None)` | replaces `autoGoToBorder`, `edgePadding` and `duration` of v1 |
+| `FlyWindow(dismissZone = DismissZone() / null)` | the drag-to-dismiss area, same as in v1 |
 | `FlyWindow(onRemoved = { })` | called once, after the window has fully left (the exit finished). Use it to reset your own state, for example `BubbleEntry.isOpen = false` |
 
 ## State holders: `rememberFlyViewModel`
@@ -320,7 +318,7 @@ FlyOverlay.start(context)   // throws if the OS refuses (the service comes from 
 - `FlyOverlay.hasPermission(context)`, `requestPermission(activity)` (suspend, plus a callback version), `FlyOverlay.isRunning` (state).
 - No silent fallback to running without the service: the developer decides what to do, for example launch the trampoline activity.
 - `FlyLaunchActivity`: a ready-made invisible trampoline that starts the overlay from a visible activity (Android 12+), so a widget, a tile or a notification action can use it. Replaces the hand-written trampoline activities of apps.
-- 1.x keeps returning `false` and opening the settings screen. The exception model is v2 only.
+- v1 returned `false` and opened the settings screen. v2 throws.
 
 ## State holders and ViewModels
 
@@ -397,12 +395,11 @@ Android's `Dialog` needs an activity window token and fails with an application 
 
 ## Milestones
 
-| | Work | Can ship in 1.x? |
+| | Work | Status |
 |---|---|---|
 | M0 | Extract `SnapPolicy` as pure functions + unit tests | yes |
 | M1 | `FlyWindowState` (position, animation, dismiss state) | yes, internal |
 | M2 | Host + `FlyWindow` (spike checklist above) | no |
-| M3 | 1.x adapter over the host | no |
 | M4 | Owners (`LifecycleOwner`), optional service, position persistence | no |
 | M5 | Docs, migration guide, 2.0.0 | no |
 
@@ -414,8 +411,8 @@ Read from the app's on-fly module. What it needs that v2 must keep:
 |---|---|
 | The "controller" is a full `ViewModel` (use cases, `SavedStateHandle`, undo/redo, `StateFlow`s) | Keep the idea: a state holder owned by the app. v2 only stops requiring `FlyController`/`Bundle` |
 | Opened from a Quick Settings tile, a widget trampoline activity, a process-text activity, a reminder receiver (no activity alive) | A process-wide entry point that works from any context is required, so the host can't depend on an activity. Process-owned host plus the optional service is the main case, not the exception |
-| `if (!updateFlyView(key, args)) { register; show }` | First-class `showOrUpdate(key, args)` (1.x `FlyViews.show` with a bundle already does it) |
-| Custom `LayoutParams` (no gravity, own flags, own animations) and runtime changes of `x`, `y`, `width`, `gravity`, `FLAG_NOT_FOCUSABLE` | Never assume a gravity or flags. Positions must be converted through the gravity (done in 1.x with `WindowPosition`) |
+| `if (!updateFlyView(key, args)) { register; show }` | First-class `showOrUpdate(key, args)` (v1 `FlyViews.show` with a bundle did it) |
+| Custom `LayoutParams` (no gravity, own flags, own animations) and runtime changes of `x`, `y`, `width`, `gravity`, `FLAG_NOT_FOCUSABLE` | Never assume a gravity or flags. Positions must be converted through the gravity (done by `AnchoredPosition`) |
 | Two modes in one window: a small draggable icon and a big editor (also a full-width bar docked at the keyboard) | One window changes size and mode. `FlyWindow` needs to allow that, not only fixed-size popups |
 | `DraggableFlyView` wraps only a small handle, but the whole window moves | Drag target and window are different things in the API |
 | Starting the foreground service from a visible trampoline activity (Android 12+) | Document it, maybe provide the trampoline |
@@ -425,10 +422,10 @@ Read from the app's on-fly module. What it needs that v2 must keep:
 | Topic | Decision |
 |---|---|
 | Minimum API | 26 (overlay window type needs it, newer APIs are version-guarded) |
-| `FlyController` + `Bundle` | Not part of the v2 API (state hoisting instead), only kept in the 1.x adapter |
+| `FlyController` + `Bundle` | Not part of the v2 API (state hoisting instead) |
 | Host owner | The process, through the application context. Windows don't need an activity or a service to live |
 | Custom owner | Any standard `LifecycleOwner` (activity, fragment, `LifecycleService`, own registry), chosen per window/item with `visibleWhen`. No new owner type |
-| Declarative first | Windows and items are composables. Imperative show/hide exists only in the 1.x adapter |
+| Declarative first | Windows and items are composables. There is no imperative show/hide |
 | Duplicate keys | The new content replaces the old one (window, and position, kept). No exception |
 | Dismiss UI | Drawn by the content, the library draws no dismiss button |
 | Self-controlled dismissal | `FlyDismissEffect { ...; dismiss() }`: the flyview takes control when a dismissal is requested (message, animation, confirmation) and calls `dismiss()` or `cancel()`. Then `onDismissRequest` commits it in the contributor's state |
@@ -444,8 +441,8 @@ Read from the app's on-fly module. What it needs that v2 must keep:
 | Removal callback | `FlyWindow(onRemoved)` runs once after the window has left, to reset app state |
 | Placement | `Floating`, `Docked(edge, size, margin, insets)`, `Fullscreen`, with `FlySize` and the `configure` escape hatch. `Anchored` and the bottom sheet come later |
 | Keyboard | A separate `ime = FlyIme.Ignore / Avoid` parameter, not part of `Docked` |
-| Aggregation | Items contributed from any screen into a window, removable one by one, no feature lost vs 1.x |
-| Hide on background | Yes by default (process owner, `ProcessLifecycleOwner` ignores rotation). Windows are removed, state is kept and restored on return |
+| Aggregation | Items contributed from any screen into a window, removable one by one, no feature lost vs v1 |
+| Hide on background | Opt-in with `visibleWhen = Foreground`. The default is `Always` for `contribute` windows (they float over other apps) and "while the screen is started" for windows a screen composes. Hidden windows are removed, their position is kept and restored on return |
 | Activity recreation | Nothing to reattach with the process owner. With an activity owner, a config change only hides the windows |
 | Service | Optional keep-alive for the process (priority + notification), not an owner. Needs a device check of how long an overlay-only process survives |
 
@@ -457,7 +454,7 @@ The first implementation is in `fly_view/.../overlay` (Android + Compose, not co
 |---|---|---|
 | Items | composed in the caller's composition | composed in the window's composition (simpler). The window's `CompositionLocal`s apply, not the contributor's |
 | `FlyWindow` default `focusable` | not specified | `false`: a display only widget does not take Back from the app below. Text fields need `true` |
-| Visibility default | the caller's owner | the caller's activity/fragment being started, or the app in the foreground for `contribute` blocks. **Floating over other apps needs `visibleWhen = Always`** |
+| Visibility default | the caller's owner | the caller's activity/fragment being started for windows a screen composes, always for `contribute` blocks (decided: they float over other apps) |
 | Hiding | removed from the window manager | removed and the content is disposed: content state is not kept, keep it in a ViewModel or state holder. Position and `FlyWindowState` are kept |
 | Overlay stop | stops when no window is left | stops when no window is alive: meant to exist (visible, not empty, not dismissed) or still playing its exit. Windows hidden by their visibility rule count as alive |
 | `FlyDialog` exit | exit animation | enter only, removed right away when it leaves the composition. `anchor` comes with `Anchored` |

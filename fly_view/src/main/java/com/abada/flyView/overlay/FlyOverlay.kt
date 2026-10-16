@@ -80,6 +80,13 @@ object FlyOverlay {
     fun contribute(id: String, content: @Composable () -> Unit): FlyContribution =
         FlyContribution(id, FlyOverlayHost.contribute(id, content))
 
+    /**
+     * What is drawn in the drop area at the bottom of the screen while a window is dragged. It receives
+     * `isHovered`, `true` when the dragged window is over the area: use it to react (scale, color...).
+     * The default is a circle with a cross that grows and turns red.
+     */
+    var dismissZoneContent: @Composable (isHovered: Boolean) -> Unit = DefaultDismissZoneContent
+
     // dismissal from outside
 
     /**

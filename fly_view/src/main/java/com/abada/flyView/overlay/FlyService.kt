@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.abada.flyView.FlyNotifications
 
 /**
  * Keeps the process alive while windows show: a foreground service with a notification.
@@ -26,8 +25,8 @@ import com.abada.flyView.FlyNotifications
  * ```
  */
 abstract class FlyService : Service() {
-    /** The id of the foreground notification, different from the one of the classic `FlyViewService` */
-    protected open val notificationId: Int get() = 2
+    /** The id of the foreground notification */
+    protected open val notificationId: Int get() = 1
 
     /** The notification shown while the overlay runs. Override it to use your own. */
     protected open fun createNotification(): Notification = FlyNotifications.build(this, CHANNEL_ID)

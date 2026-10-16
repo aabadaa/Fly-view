@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
 
     <application
-        android:name="com.abada.flyview.v2.FlyApp"
+        android:name="com.abada.flyview.FlyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -28,23 +28,18 @@
         </activity>
 
 
-        <!-- the demo of the new overlay API -->
-        <activity
-            android:name="com.abada.flyview.v2.V2Activity"
-            android:exported="false"
-            android:label="Overlay API" />
 
         <!-- the invisible trampoline that starts the overlay from a visible context -->
         <activity
-            android:name="com.abada.flyview.v2.LaunchActivity"
+            android:name="com.abada.flyview.LaunchActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:noHistory="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <!-- v2: keeps the process alive while windows show -->
+        <!-- keeps the process alive while windows show -->
         <service
-            android:name="com.abada.flyview.v2.ExampleFlyService"
+            android:name="com.abada.flyview.ExampleFlyService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
@@ -52,17 +47,6 @@
                 android:value="shows a floating window" />
         </service>
 
-        <service
-            android:name="com.abada.flyview.FlyServiceImpl"
-            android:enabled="true"
-            android:foregroundServiceType="specialUse"
-            android:exported="false" >
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="This is needed for access the WindowManager and show the fly view"
-                />
-
-        </service>
     </application>
 
 </manifest>

@@ -6,7 +6,7 @@ Show any composable **on top of other apps**. Draggable, snaps to the screen edg
 [flyView-demo.webm](https://github.com/aabadaa/FLyView/assets/54916786/79d6c4f2-6a83-4ac4-a44c-8e3f74d58dfa)
 
 
-**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Placement](#placement-size-keyboard) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Classic API](#classic-api-1x)
+**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Placement](#placement-size-keyboard) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
 
 ## Install
 
@@ -19,7 +19,7 @@ implementation 'com.github.aabadaa:Fly-view:Tag'
 ```
 [![](https://jitpack.io/v/aabadaa/Fly-view.svg)](https://jitpack.io/#aabadaa/Fly-view)
 
-Needs the user to allow **"Draw over other apps"**: with the overlay API you ask for it and the library never opens settings behind your back (the classic `FlyViews.show` does open the settings screen when the permission is missing).
+Needs the user to allow **"Draw over other apps"**: you ask for it, the library never opens settings behind your back.
 
 ## Quick start
 
@@ -31,7 +31,6 @@ FlyOverlay.contribute("player") {
     if (open) {
         FlyWindow(
             "player",
-            visibleWhen = FlyVisibility.Always,       // over other apps too. The default hides it while your app is in the background
             onDismissRequest = { PlayerState.isOpen.value = false },
         ) {
             Column(Modifier.background(Color.White)) {
@@ -54,7 +53,7 @@ if (FlyOverlay.hasPermission(context) || FlyOverlay.requestPermission(activity))
 
 That is all. The overlay stops itself when its last window is gone, the next `start` composes your blocks again.
 
-Full sample: [`app/.../v2`](app/src/main/java/com/abada/flyview/v2) (a bubble that expands into a panel, and a window that aggregates items from a screen).
+Full sample: [`app`](app/src/main/java/com/abada/flyview) (a bubble that expands into a panel, and a window that aggregates items from a screen).
 
 ## Cheat sheet
 
@@ -87,7 +86,7 @@ All calls: main thread.
 | `key` | - | identifies the window. A duplicate key replaces the old content |
 | `state` | `rememberFlyWindowState(key)` | position, one per mode if it remembers one for each |
 | `visible` | `true` | `false` plays `exit`, then removes it and calls `onRemoved` |
-| `visibleWhen` | `Default` | `Default` hides it while the app is in the background (the caller's activity or fragment must be started, the app in the foreground for `contribute`). Use `Always` to float over other apps. Also `Foreground`, `Background`, `Owner(lifecycleOwner)` |
+| `visibleWhen` | `Default` | `Default`: always for a `contribute` block (floats over other apps), while the screen's activity or fragment is started for a window a screen composes. Also `Always`, `Foreground`, `Background`, `Owner(lifecycleOwner)` |
 | `focusable` | `false` | `true` for text fields and the back button, it takes them from the app below |
 | `drag` | `Whole` | `None`, `Whole`, `HandleOnly` (use `Modifier.flyDragHandle()`) |
 | `snap` | `Edges()` | `FlySnap.None`, or `Edges(padding, durationMillis)` |
@@ -100,7 +99,7 @@ All calls: main thread.
 | `onClosingSoon` | `null` | a hint that it may close soon |
 | `configure` | `null` | last resort: change the raw `WindowManager.LayoutParams` |
 
-Behavior: it stays inside the usable screen (system bars and cutout), survives rotation and size changes, flies to the closest edge with the fling velocity, and shows a drop area while dragging that highlights with a haptic tick (`closeViewContent` changes its look).
+Behavior: it stays inside the usable screen (system bars and cutout), survives rotation and size changes, flies to the closest edge with the fling velocity, and shows a drop area while dragging that highlights with a haptic tick (`FlyOverlay.dismissZoneContent` changes its look).
 
 ### One position per mode
 
@@ -204,15 +203,15 @@ The math and the state machines have no Android dependency and run as plain JVM 
 | `FlyServiceStartException` | start from a visible activity (`FlyLaunchActivity`) |
 | `FlyOverlayNotStartedException` | call `FlyOverlay.start` before a screen composes a `FlyWindow` |
 | Nothing shows after `start` | the `contribute` block must show a window (check your state), and its `visibleWhen` must allow it |
-| The window vanishes when the user leaves the app | `visibleWhen = FlyVisibility.Always` (the default hides it in the background). If the process itself is killed, add a `FlyService` |
+| The window vanishes when the user leaves the app | check `visibleWhen`: a window a screen composes follows its screen by default, use `Always`. If the process itself is killed, add a `FlyService` |
 | Back button goes to the overlay, not the app | `focusable = false` |
 | The text field has no keyboard | `focusable = true` |
 | A request is lost | use a `Channel` with `send`, not a `SharedFlow` |
 | State resets when the window hides | content state is not kept across hide/show, keep it in a ViewModel or state holder |
 
-## Classic API (1.x)
+## Migrating from v1
 
-The first API (`FlyViews`, `FlyViewInfo`, `DraggableFlyView`) keeps working, with a few source-level changes listed in [docs/classic-api.md](docs/classic-api.md#changes-from-the-first-release).
+v2 replaced the v1 API (`FlyViews`, `FlyViewInfo`, `DraggableFlyView`, `FlyViewService`, `FlyController`). Every old API and its replacement: [docs/migration-v1-to-v2.md](docs/migration-v1-to-v2.md).
 
 The design notes behind the new API: [docs/design-v2.md](docs/design-v2.md).
 

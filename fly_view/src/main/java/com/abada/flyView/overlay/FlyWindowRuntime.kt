@@ -17,8 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.abada.flyView.DismissZone
-import com.abada.flyView.FlyView
 import com.abada.flyView.core.AnchoredPosition
 import com.abada.flyView.core.ClosingReason
 import com.abada.flyView.core.DismissCoordinator
@@ -38,11 +36,6 @@ import com.abada.flyView.core.PositionSpec
 import com.abada.flyView.core.SizeSpec
 import com.abada.flyView.core.SnapPolicy
 import com.abada.flyView.core.VAnchor
-import com.abada.flyView.windowManagerUtils.DismissOverlay
-import com.abada.flyView.windowManagerUtils.anchoredPosition
-import com.abada.flyView.windowManagerUtils.displayBounds
-import com.abada.flyView.windowManagerUtils.toCore
-import com.abada.flyView.windowManagerUtils.usableBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.max
 import kotlin.math.roundToInt

@@ -1,4 +1,4 @@
-package com.abada.flyview.v2
+package com.abada.flyview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
