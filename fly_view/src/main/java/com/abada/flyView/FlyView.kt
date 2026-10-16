@@ -94,11 +94,14 @@ internal class FlyView(
     }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-            onBackPressedDispatcherOwner.onBackPressedDispatcher.onBackPressed()
+        keyDispatcher?.invoke(event)?.let { return it }
+        val dispatcher = onBackPressedDispatcherOwner.onBackPressedDispatcher
+        if (event?.keyCode == KeyEvent.KEYCODE_BACK && dispatcher.hasEnabledCallbacks()) {
+            // only consume back when a BackHandler wants it, otherwise let the system handle it
+            if (event.action == KeyEvent.ACTION_UP) dispatcher.onBackPressed()
             return true
         }
-        return keyDispatcher?.invoke(event) ?: super.dispatchKeyEvent(event)
+        return super.dispatchKeyEvent(event)
     }
 
 }
