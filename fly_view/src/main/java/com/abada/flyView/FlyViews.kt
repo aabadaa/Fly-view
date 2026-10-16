@@ -52,7 +52,8 @@ object FlyViews {
      * @param serviceClass Pass your [FlyViewService] subclass to keep the view alive when your
      * app is in the background, `null` to add it straight to the window manager
      * @param bundle An optional bundle that will be passed to [FlyController.update]
-     * @return `true` if the view is showing (or the service is starting), `false` otherwise
+     * @return `true` if the view is showing (or the service is starting), `false` otherwise, for example
+     * when the system refuses to start the service from the background (the error is logged)
      */
     fun show(
         context: Context,
@@ -72,8 +73,17 @@ object FlyViews {
             val intent = Intent(context, serviceClass)
             bundle?.let { intent.putExtras(it) }
             intent.putExtra(EXTRA_KEY, key)
-            context.startForegroundService(intent)
-            return true
+            return try {
+                context.startForegroundService(intent)
+                true
+            } catch (e: IllegalStateException) {
+                // Android 12+ refuses to start a foreground service from the background
+                Log.e(TAG, "show: the system refused to start ${serviceClass.simpleName}", e)
+                false
+            } catch (e: SecurityException) {
+                Log.e(TAG, "show: ${serviceClass.simpleName} is missing a manifest declaration or permission", e)
+                false
+            }
         }
         if (!isShown(key)) {
             val app = context.applicationContext
