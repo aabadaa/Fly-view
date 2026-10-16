@@ -1,5 +1,6 @@
 package com.abada.flyView.overlay
 
+import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -155,6 +156,9 @@ internal class FlyItemEntry(
  * update your state here. Without it the window hides until it leaves the composition and comes back.
  * @param onRemoved called once after the window has gone because [visible] became `false`
  * @param onClosingSoon called with a reason when the window may close soon
+ * @param onKeyEvent sees every key event of the window before its content does, return `true` to consume it.
+ * Use it to fix device quirks (a key that reports the wrong code). The window needs `focusable = true`
+ * to receive keys. Compose key modifiers (`onPreviewKeyEvent`) of the content work too, and see the back key.
  * @param configure last resort: change the raw window manager params, called whenever they are built
  * @param content the content, its receiver gives the items, `dismiss()` and `closingSoon`
  */
@@ -176,6 +180,7 @@ fun FlyWindow(
     onDismissRequest: (() -> Unit)? = null,
     onRemoved: (() -> Unit)? = null,
     onClosingSoon: ((FlyClosingReason) -> Unit)? = null,
+    onKeyEvent: ((KeyEvent) -> Boolean)? = null,
     configure: ((WindowManager.LayoutParams) -> Unit)? = null,
     content: @Composable FlyWindowScope.() -> Unit,
 ) {
@@ -203,6 +208,7 @@ fun FlyWindow(
     SideEffect {
         runtime.configure = configure
         runtime.onClosingSoon = onClosingSoon
+        runtime.onKeyEvent = onKeyEvent
         runtime.onDismissCommit = if (currentDismiss != null) ({ currentDismiss?.invoke() }) else null
         runtime.shownTarget = shown
         runtime.wantsToExist = visible && (!hideWhenEmpty || hasItems) && !runtime.hiddenByDismiss

@@ -58,7 +58,7 @@ and collect them in the window. Do not use a `SharedFlow`, it drops the value wh
 | `params = LayoutParams(...)` | `placement`, `focusable`, `ime`, and `configure = { params -> }` for anything else |
 | `params.windowAnimations` | `enter = fadeIn()`, `exit = fadeOut()` (any Compose transition) |
 | `params.x` / `params.y` | `rememberFlyWindowState(key, initial = FlyPosition...)` |
-| `keyDispatcher` | no window level hook. Use Compose key modifiers in the content (`Modifier.onPreviewKeyEvent`), and `focusable = true` |
+| `keyDispatcher` | `onKeyEvent = { event -> ... }`, return `true` to consume. It sees every key before the content. Compose key modifiers (`Modifier.onPreviewKeyEvent`) work too. The window needs `focusable = true` |
 | `dismissZone = DismissZone(...)` / `null` | `dismissZone = DismissZone(...)` / `null` (same type, now in `com.abada.flyView.overlay`) |
 | `focusable = true/false/null` | `focusable = true/false` (default is now `false`) |
 | `content = { ... }` with the `FlyViewInfo` as receiver | `content = { ... }` with `FlyWindowScope` as receiver (`items`, `dismiss()`, `closingSoon`) |

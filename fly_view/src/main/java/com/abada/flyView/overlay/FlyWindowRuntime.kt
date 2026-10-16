@@ -71,6 +71,7 @@ internal class FlyWindowRuntime(
     var configure: ((WindowManager.LayoutParams) -> Unit)? = null
     var onDismissCommit: (() -> Unit)? = null
     var onClosingSoon: ((ClosingReason) -> Unit)? = null
+    var onKeyEvent: ((android.view.KeyEvent) -> Boolean)? = null
 
     /** `true` once a dismissal was committed and nobody handles `onDismissRequest` */
     var hiddenByDismiss by mutableStateOf(false)
@@ -168,6 +169,8 @@ internal class FlyWindowRuntime(
         if (isAttached) return
         val view = FlyView(
             context = appContext,
+            // true consumes the key, anything else lets it go on to the content and the back handling
+            keyDispatcher = { event -> if (event != null && onKeyEvent?.invoke(event) == true) true else null },
             parentContext = parentContext,
             onBackFallback = { coordinator.request(DismissReason.Back) },
             content = content,

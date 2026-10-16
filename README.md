@@ -97,6 +97,7 @@ All calls: main thread.
 | `onDismissRequest` | `null` | commit a dismissal: update your state here |
 | `onRemoved` | `null` | the window has gone after `visible = false` |
 | `onClosingSoon` | `null` | a hint that it may close soon |
+| `onKeyEvent` | `null` | sees every key before the content, `true` consumes it (needs `focusable = true`) |
 | `configure` | `null` | last resort: change the raw `WindowManager.LayoutParams` |
 
 Behavior: it stays inside the usable screen (system bars and cutout), survives rotation and size changes, flies to the closest edge with the fling velocity, and shows a drop area while dragging that highlights with a haptic tick (`FlyOverlay.dismissZoneContent` changes its look).

@@ -117,14 +117,21 @@ internal class FlyView(
         store.clear()
     }
 
+    /**
+     * The order of a key event:
+     * 1. [keyDispatcher], the window level hook (`FlyWindow(onKeyEvent = ...)`), sees every key first
+     * 2. the content: Compose key modifiers (`onPreviewKeyEvent`, `onKeyEvent`) of the focused element,
+     *    so they can handle or swallow the back key too
+     * 3. the back button: consumed only when a back handler or the fallback wants it
+     */
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
         keyDispatcher?.invoke(event)?.let { return it }
+        if (super.dispatchKeyEvent(event)) return true
         val dispatcher = onBackPressedDispatcherOwner.onBackPressedDispatcher
-        // consume back only when someone wants it, otherwise the key is not swallowed for nothing
         if (event?.keyCode == KeyEvent.KEYCODE_BACK && (onBackFallback != null || dispatcher.hasEnabledCallbacks())) {
             if (event.action == KeyEvent.ACTION_UP) dispatcher.onBackPressed()
             return true
         }
-        return super.dispatchKeyEvent(event)
+        return false
     }
 }
