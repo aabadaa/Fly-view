@@ -16,6 +16,7 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.abada.flyView.FlyViewService.Companion.show
 import com.abada.flyView.windowManagerUtils.addFlyInfo
+import com.abada.flyView.windowManagerUtils.removeFlyView
 import com.abada.flyView.windowManagerUtils.showedViews
 import com.abada.flyView.windowManagerUtils.updateFlyView
 
@@ -30,6 +31,7 @@ import com.abada.flyView.windowManagerUtils.updateFlyView
 abstract class FlyViewService : Service() {
     private lateinit var wm: WindowManager
     private var numberOfShowedViews = 0
+    private val ownedKeys = mutableSetOf<String>()
 
     /**
      * Called when the service is started with an intent.
@@ -41,15 +43,8 @@ abstract class FlyViewService : Service() {
      * @return The return value indicates what semantics the system should use for the service's current started state
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val channel = NotificationChannel(
-            ID, ID, NotificationManager.IMPORTANCE_LOW
-        )
-        val notificationManager = getSystemService<NotificationManager>()!!
-        notificationManager.createNotificationChannel(channel)
-
-        val notification: Notification = NotificationCompat.Builder(this, ID).build()
         // must be called after startForegroundService even if we end up stopping right away
-        startForeground(1, notification)
+        startForeground(1, createNotification(ID))
 
         val key = intent?.getStringExtra("key")
         if (key == null || !infoProviders.containsKey(key)) {
@@ -81,6 +76,28 @@ abstract class FlyViewService : Service() {
     override fun onCreate() {
         super.onCreate()
         wm = getSystemService<WindowManager>()!!
+        getSystemService<NotificationManager>()!!.createNotificationChannel(
+            NotificationChannel(ID, ID, NotificationManager.IMPORTANCE_LOW)
+        )
+    }
+
+    /**
+     * Override this to customize the foreground notification (icon, title, content intent...).
+     * The notification must have a small icon, otherwise the system rejects it.
+     *
+     * @param channelId The id of the notification channel created by this service
+     */
+    protected open fun createNotification(channelId: String): Notification =
+        NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setOngoing(true)
+            .build()
+
+    override fun onDestroy() {
+        // the system can stop the service while views are still attached
+        ownedKeys.toList().forEach { wm.removeFlyView(it) }
+        ownedKeys.clear()
+        super.onDestroy()
     }
 
     /**
@@ -97,11 +114,14 @@ abstract class FlyViewService : Service() {
         val provider = infoProviders[key] ?: return false
         return (provider.invoke() as FlyViewInfo<FlyController>).run {
             val onRemove = onRemove
-            wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
+            val added = wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
                 onRemove()
+                ownedKeys.remove(key)
                 numberOfShowedViews--
                 stopIfIdle()
             }))
+            if (added) ownedKeys.add(key)
+            added
         }
     }
 
