@@ -9,4 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 object CounterState {
     val count = MutableStateFlow(0)
     val isOpen = MutableStateFlow(false)
+    val isExpandableOpen = MutableStateFlow(false)
+    val expanded = MutableStateFlow(false)
 }
