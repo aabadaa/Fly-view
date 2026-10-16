@@ -1,9 +1,7 @@
 package com.abada.flyView
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
-import android.util.Log
 import android.view.KeyEvent
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
@@ -41,16 +39,27 @@ internal class FlyView(
     @Composable
     override fun Content() {
         content()
-        if (isAttachedToWindow) {
-            Log.i(ContentValues.TAG, "flyContent: showed")
-            createComposition()
-            (lifecycle as LifecycleRegistry).currentState = Lifecycle.State.RESUMED
-        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        viewModelStoreInstance.clear()
     }
 
     //lifecycle
     override val savedStateRegistry: SavedStateRegistry
         get() = savedStateRegistryController.savedStateRegistry
+
+    private val viewModelStoreInstance = ViewModelStore()
 
     private var lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle = lifecycleRegistry
@@ -74,7 +83,7 @@ internal class FlyView(
         setViewTreeSavedStateRegistryOwner(lifecycleOwner)
         setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
             override val viewModelStore: ViewModelStore
-                get() = ViewModelStore()
+                get() = viewModelStoreInstance
         })
         val recompose = Recomposer(AndroidUiDispatcher.CurrentThread)
         compositionContext = recompose
