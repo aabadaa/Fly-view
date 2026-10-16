@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
+import android.util.Log
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
@@ -47,14 +48,30 @@ abstract class FlyViewService : Service() {
         notificationManager.createNotificationChannel(channel)
 
         val notification: Notification = NotificationCompat.Builder(this, ID).build()
-        val key = intent!!.getStringExtra("key")!!
+        // must be called after startForegroundService even if we end up stopping right away
         startForeground(1, notification)
+
+        val key = intent?.getStringExtra("key")
+        if (key == null || !infoProviders.containsKey(key)) {
+            Log.e(TAG, "onStartCommand: no FlyViewInfo provider registered for key=$key")
+            stopIfIdle()
+            return START_NOT_STICKY
+        }
         if (showView(key)) numberOfShowedViews++
         intent.extras?.let {
             updateFlyView(key, it)
         }
+        stopIfIdle()
 
-        return START_STICKY_COMPATIBILITY
+        // views live only in memory, so there is nothing to restore if the system kills the service
+        return START_NOT_STICKY
+    }
+
+    private fun stopIfIdle() {
+        if (numberOfShowedViews <= 0) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
     }
 
     /**
@@ -77,15 +94,13 @@ abstract class FlyViewService : Service() {
         key: String
     ): Boolean {
         if (showedViews.containsKey(key)) return false
-        return (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
+        val provider = infoProviders[key] ?: return false
+        return (provider.invoke() as FlyViewInfo<FlyController>).run {
             val onRemove = onRemove
             wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
                 onRemove()
                 numberOfShowedViews--
-                if (numberOfShowedViews == 0) {
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
-                }
+                stopIfIdle()
             }))
         }
     }
@@ -102,6 +117,7 @@ abstract class FlyViewService : Service() {
     companion object {
         /** Notification channel ID for the foreground service */
         private const val ID = "flyViewService"
+        private const val TAG = "FlyViewService"
 
         /**
          * Add here your [FlyViewInfo] to enable the service to show it when you call [show] methods.
