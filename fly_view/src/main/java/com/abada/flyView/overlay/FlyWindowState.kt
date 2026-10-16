@@ -1,6 +1,5 @@
 package com.abada.flyView.overlay
 
-import android.graphics.Rect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -92,5 +91,3 @@ fun rememberFlyWindowState(
     val context = LocalContext.current.applicationContext
     return remember(key) { FlyOverlayHost.stateFor(context, key, initial, persist) }
 }
-
-internal fun Rect.toCore() = com.abada.flyView.core.FlyRect(left, top, right, bottom)

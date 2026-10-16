@@ -13,10 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.abada.flyView.core.EdgeSide
+import com.abada.flyView.core.FlyPoint
+import com.abada.flyView.core.FlySizePx
+import com.abada.flyView.core.FlyVelocity
+import com.abada.flyView.core.SnapPolicy
 import com.abada.flyView.windowManagerUtils.DismissOverlay
-import com.abada.flyView.windowManagerUtils.WindowPosition
+import com.abada.flyView.windowManagerUtils.anchoredPosition
 import com.abada.flyView.windowManagerUtils.displayBounds
 import com.abada.flyView.windowManagerUtils.removeFlyView
+import com.abada.flyView.windowManagerUtils.toCore
 import com.abada.flyView.windowManagerUtils.usableBounds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +31,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
@@ -56,8 +61,6 @@ fun defaultFlyViewParams(): WindowManager.LayoutParams = WindowManager.LayoutPar
     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
     PixelFormat.TRANSLUCENT
 ).also { it.windowAnimations = android.R.style.Animation }
-
-internal enum class Side { None, Left, Right }
 
 /**
  * A holder to all information needed for the [FlyView]
@@ -102,7 +105,7 @@ class FlyViewInfo<T : FlyController>(
     // set by DraggableFlyView
     internal var edgePaddingPx = 0
     internal var snapDuration = 300L
-    internal var snappedSide = Side.None
+    internal var snappedSide: EdgeSide? = null
     private var draggableCount = 0
     private var pendingSnap = false
     private var dragStartX = 0
@@ -237,7 +240,7 @@ class FlyViewInfo<T : FlyController>(
      * @param duration Animation duration in milliseconds
      */
     fun animateTo(x: Int = params.x, y: Int = params.y, duration: Long = 300) {
-        snappedSide = Side.None
+        snappedSide = null
         moveTo(x, y, duration)
     }
 
@@ -279,7 +282,7 @@ class FlyViewInfo<T : FlyController>(
         updateLayoutParams()
     }
 
-    private fun positionMapper() = WindowPosition(
+    private fun positionMapper() = anchoredPosition(
         gravity = params.gravity,
         layoutDirection = flyView.layoutDirection,
         frame = if (params.flags and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN != 0)
@@ -305,25 +308,16 @@ class FlyViewInfo<T : FlyController>(
         }
         pendingSnap = false
         val m = positionMapper()
-        val b = screenBounds
-        val x = m.absX(params.x)
-        val y = m.absY(params.y)
-        val minX = b.left
-        val maxX = max(minX, b.right - w)
-        val targetY = (y + vy * FLING_PROJECTION).roundToInt()
-            .coerceIn(b.top, max(b.top, b.bottom - h))
-        val targetX: Int
-        if (autoSnap) {
-            val toRight = x + w / 2f + vx * FLING_PROJECTION > b.exactCenterX()
-            snappedSide = if (toRight) Side.Right else Side.Left
-            targetX = if (toRight) (b.right - w - edgePaddingPx).coerceAtLeast(minX)
-            else (b.left + edgePaddingPx).coerceAtMost(maxX)
-        } else {
-            snappedSide = Side.None
-            targetX = x.coerceIn(minX, maxX)
-        }
-        val px = m.paramX(targetX)
-        val py = m.paramY(targetY)
+        val settled = SnapPolicy.settle(
+            position = FlyPoint(m.absX(params.x), m.absY(params.y)),
+            size = FlySizePx(w, h),
+            bounds = screenBounds.toCore(),
+            velocity = FlyVelocity(vx, vy),
+            snapToEdges = if (autoSnap) edgePaddingPx else null,
+        )
+        snappedSide = settled.side
+        val px = m.paramX(settled.position.x)
+        val py = m.paramY(settled.position.y)
         if (animated) moveTo(px, py, duration) else {
             animator?.cancel()
             setPosition(px, py)
@@ -337,14 +331,14 @@ class FlyViewInfo<T : FlyController>(
         val h = flyView.height
         if (w == 0 || h == 0) return
         val m = positionMapper()
-        val b = screenBounds
-        val x = when (snappedSide) {
-            Side.Left -> b.left + edgePaddingPx
-            Side.Right -> b.right - w - edgePaddingPx
-            Side.None -> m.absX(params.x)
-        }.coerceIn(b.left, max(b.left, b.right - w))
-        val y = m.absY(params.y).coerceIn(b.top, max(b.top, b.bottom - h))
-        setPosition(m.paramX(x), m.paramY(y))
+        val target = SnapPolicy.reanchor(
+            position = FlyPoint(m.absX(params.x), m.absY(params.y)),
+            size = FlySizePx(w, h),
+            bounds = screenBounds.toCore(),
+            side = snappedSide,
+            edgePadding = edgePaddingPx,
+        )
+        setPosition(m.paramX(target.x), m.paramY(target.y))
     }
 
     private fun onWindowSizeChanged() {
@@ -366,7 +360,7 @@ class FlyViewInfo<T : FlyController>(
         if (!attached || removing) return
         animator?.cancel()
         dragging = true
-        snappedSide = Side.None
+        snappedSide = null
         dragStartX = params.x
         dragStartY = params.y
         dismissZone?.let { DismissOverlay.show(appContext, windowManager, it) }
@@ -376,20 +370,21 @@ class FlyViewInfo<T : FlyController>(
     internal fun dragBy(dx: Float, dy: Float) {
         if (!dragging) return
         val m = positionMapper()
-        val d = windowManager.displayBounds(appContext)
-        val w = flyView.width
-        val h = flyView.height
-        val x = m.absX(dragStartX + (if (m.flipX) -dx else dx).roundToInt())
-            .coerceIn(d.left, max(d.left, d.right - w))
-        val y = m.absY(dragStartY + (if (m.flipY) -dy else dy).roundToInt())
-            .coerceIn(d.top, max(d.top, d.bottom - h))
-        setPosition(m.paramX(x), m.paramY(y))
-        updateDismissHover(d, m.absY(params.y) + h / 2f)
+        val display = windowManager.displayBounds(appContext).toCore()
+        val size = FlySizePx(flyView.width, flyView.height)
+        val abs = SnapPolicy.clamp(
+            FlyPoint(
+                m.absX(dragStartX + (if (m.flipX) -dx else dx).roundToInt()),
+                m.absY(dragStartY + (if (m.flipY) -dy else dy).roundToInt()),
+            ),
+            size, display,
+        )
+        setPosition(m.paramX(abs.x), m.paramY(abs.y))
+        val zone = dismissZone ?: return
+        updateDismissHover(SnapPolicy.isOverDismissZone(abs, size, display, zone.heightFraction), zone)
     }
 
-    private fun updateDismissHover(d: Rect, centerY: Float) {
-        val zone = dismissZone ?: return
-        val over = centerY >= d.bottom - d.height() * zone.heightFraction
+    private fun updateDismissHover(over: Boolean, zone: DismissZone) {
         if (over == isOverDismissZone) return
         isOverDismissZone = over
         DismissOverlay.setHovered(over)
@@ -409,8 +404,5 @@ class FlyViewInfo<T : FlyController>(
 
     private companion object {
         const val TAG = "FlyViewInfo"
-
-        /** How far (in seconds) the fling velocity is projected to pick the edge to snap to */
-        const val FLING_PROJECTION = 0.12f
     }
 }

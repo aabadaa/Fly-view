@@ -41,7 +41,9 @@ import com.abada.flyView.core.SizeSpec
 import com.abada.flyView.core.SnapPolicy
 import com.abada.flyView.core.VAnchor
 import com.abada.flyView.windowManagerUtils.DismissOverlay
+import com.abada.flyView.windowManagerUtils.anchoredPosition
 import com.abada.flyView.windowManagerUtils.displayBounds
+import com.abada.flyView.windowManagerUtils.toCore
 import com.abada.flyView.windowManagerUtils.usableBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.max
@@ -332,22 +334,12 @@ internal class FlyWindowRuntime(
         get() = FlySizePx(flyView?.width ?: 0, flyView?.height ?: 0)
 
     private fun mapper(): AnchoredPosition {
-        val display = windowManager.displayBounds(appContext)
         val inScreen = params.flags and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN != 0
-        val frame = if (inScreen) display else windowManager.usableBounds(appContext)
-        val g = Gravity.getAbsoluteGravity(params.gravity, flyView?.layoutDirection ?: View.LAYOUT_DIRECTION_LTR)
-        val h = when (g and Gravity.HORIZONTAL_GRAVITY_MASK) {
-            Gravity.LEFT -> HAnchor.Start
-            Gravity.RIGHT -> HAnchor.End
-            else -> HAnchor.Center
-        }
-        val v = when (g and Gravity.VERTICAL_GRAVITY_MASK) {
-            Gravity.TOP -> VAnchor.Top
-            Gravity.BOTTOM -> VAnchor.Bottom
-            else -> VAnchor.Center
-        }
+        val frame = if (inScreen) windowManager.displayBounds(appContext) else windowManager.usableBounds(appContext)
         val size = windowSize
-        return AnchoredPosition(h, v, frame.toCore(), size.width, size.height)
+        return anchoredPosition(
+            params.gravity, flyView?.layoutDirection ?: View.LAYOUT_DIRECTION_LTR, frame, size.width, size.height
+        )
     }
 
     private fun currentAbs(): FlyPoint {

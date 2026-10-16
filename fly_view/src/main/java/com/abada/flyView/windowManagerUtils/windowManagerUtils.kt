@@ -8,6 +8,10 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
+import com.abada.flyView.core.AnchoredPosition
+import com.abada.flyView.core.FlyRect
+import com.abada.flyView.core.HAnchor
+import com.abada.flyView.core.VAnchor
 
 /** The views that are showing now, by key. Main thread only. */
 internal val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
@@ -36,50 +40,25 @@ internal fun WindowManager.usableBounds(context: Context): Rect {
     return bounds
 }
 
+internal fun Rect.toCore() = FlyRect(left, top, right, bottom)
+
 /**
  * Converts between `WindowManager.LayoutParams.x/y` and absolute top-left positions.
  *
  * The meaning of `x` and `y` depends on the window gravity: an offset from the left/top edge,
  * from the right/bottom edge (growing inwards), or from the center (no gravity, the default).
  */
-internal class WindowPosition(
-    gravity: Int,
-    layoutDirection: Int,
-    private val frame: Rect,
-    private val w: Int,
-    private val h: Int,
-) {
-    private val g = Gravity.getAbsoluteGravity(gravity, layoutDirection)
-    private val horizontal = g and Gravity.HORIZONTAL_GRAVITY_MASK
-    private val vertical = g and Gravity.VERTICAL_GRAVITY_MASK
-
-    /** `true` if a growing `params.x` moves the window to the left */
-    val flipX get() = horizontal == Gravity.RIGHT
-
-    /** `true` if a growing `params.y` moves the window up */
-    val flipY get() = vertical == Gravity.BOTTOM
-
-    fun absX(x: Int): Int = when (horizontal) {
-        Gravity.LEFT -> frame.left + x
-        Gravity.RIGHT -> frame.right - w - x
-        else -> frame.left + (frame.width() - w) / 2 + x
+internal fun anchoredPosition(gravity: Int, layoutDirection: Int, frame: Rect, w: Int, h: Int): AnchoredPosition {
+    val g = Gravity.getAbsoluteGravity(gravity, layoutDirection)
+    val horizontal = when (g and Gravity.HORIZONTAL_GRAVITY_MASK) {
+        Gravity.LEFT -> HAnchor.Start
+        Gravity.RIGHT -> HAnchor.End
+        else -> HAnchor.Center
     }
-
-    fun absY(y: Int): Int = when (vertical) {
-        Gravity.TOP -> frame.top + y
-        Gravity.BOTTOM -> frame.bottom - h - y
-        else -> frame.top + (frame.height() - h) / 2 + y
+    val vertical = when (g and Gravity.VERTICAL_GRAVITY_MASK) {
+        Gravity.TOP -> VAnchor.Top
+        Gravity.BOTTOM -> VAnchor.Bottom
+        else -> VAnchor.Center
     }
-
-    fun paramX(absX: Int): Int = when (horizontal) {
-        Gravity.LEFT -> absX - frame.left
-        Gravity.RIGHT -> frame.right - w - absX
-        else -> absX - frame.left - (frame.width() - w) / 2
-    }
-
-    fun paramY(absY: Int): Int = when (vertical) {
-        Gravity.TOP -> absY - frame.top
-        Gravity.BOTTOM -> frame.bottom - h - absY
-        else -> absY - frame.top - (frame.height() - h) / 2
-    }
+    return AnchoredPosition(horizontal, vertical, frame.toCore(), w, h)
 }
