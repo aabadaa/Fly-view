@@ -11,6 +11,14 @@ import com.abada.flyView.FlyViewInfo
 
 internal val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
 
+private const val CLOSE_ZONE_DIVISOR = 6
+
+/** Height of the bottom zone in which a dragged view is removed, and of the close view */
+internal fun closeZoneHeight(): Int = Resources.getSystem().displayMetrics.heightPixels / CLOSE_ZONE_DIVISOR
+
+/** Whether a view whose layout y is [y] is in the removal zone */
+internal fun isInCloseZone(y: Int): Boolean = y > closeZoneHeight()
+
 internal fun hideCloseView() {
     showedViews["close"]?.let { closeView ->
         closeView.params.apply {
@@ -25,7 +33,7 @@ internal fun showCloseView() {
     showedViews["close"]?.let { closeView ->
         closeView.params.apply {
             width = WindowManager.LayoutParams.MATCH_PARENT
-            height = Resources.getSystem().displayMetrics.heightPixels / 6
+            height = closeZoneHeight()
         }
         closeView.updateLayoutParams()
     }
@@ -37,7 +45,7 @@ internal fun WindowManager.LayoutParams.animateTo(
     y: Int = this.y,
     duration: Long = 300,
     onUpdate: () -> Unit
-) {
+): ObjectAnimator {
     val xProperty = object : Property<WindowManager.LayoutParams, Int>(Int::class.java, "x") {
         override fun get(params: WindowManager.LayoutParams): Int = params.x
         override fun set(params: WindowManager.LayoutParams, value: Int) {
@@ -62,4 +70,5 @@ internal fun WindowManager.LayoutParams.animateTo(
         }
     }
     animator.start()
+    return animator
 }

@@ -71,7 +71,7 @@ fun <T : FlyController> WindowManager.addFlyInfo(
     }
     showedViews[key] = flyViewInfo
     flyViewInfo.addToWindowManager(context, key, this) {
-        if (it.y > Resources.getSystem().displayMetrics.heightPixels / 6) {
+        if (isInCloseZone(it.y)) {
             showCloseView()
         } else {
             hideCloseView()

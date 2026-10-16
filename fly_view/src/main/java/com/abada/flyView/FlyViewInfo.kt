@@ -1,5 +1,6 @@
 package com.abada.flyView
 
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.PixelFormat
@@ -52,6 +53,7 @@ data class FlyViewInfo<T : FlyController>(
     lateinit var removeView: () -> Unit
 
     private var isRemoving = false
+    private var animator: ObjectAnimator? = null
 
     /**
      * Internal method to add this FlyView to the WindowManager.
@@ -115,8 +117,16 @@ data class FlyViewInfo<T : FlyController>(
      * @param y Target Y coordinate (defaults to current Y position)
      * @param duration Animation duration in milliseconds
      */
-    fun animateTo(x: Int = params.x, y: Int = params.y, duration: Long = 300) =
-        params.animateTo(x, y, duration, ::updateLayoutParams)
+    fun animateTo(x: Int = params.x, y: Int = params.y, duration: Long = 300) {
+        cancelAnimation()
+        animator = params.animateTo(x, y, duration, ::updateLayoutParams)
+    }
+
+    /** Stops a running [animateTo] so it doesn't fight with the user's drag */
+    internal fun cancelAnimation() {
+        animator?.cancel()
+        animator = null
+    }
 
     /**
      * Call this method to move the fly view to the border of the screen.

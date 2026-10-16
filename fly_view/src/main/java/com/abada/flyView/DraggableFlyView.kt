@@ -1,12 +1,12 @@
 package com.abada.flyView
 
-import android.content.res.Resources
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import com.abada.flyView.windowManagerUtils.isInCloseZone
 
 /**
  * This method makes your flyView draggable
@@ -23,10 +23,11 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
 ) = Box(
     modifier = Modifier.pointerInput(autoGoToBorder, duration) {
         detectDragGestures(onDragEnd = {
-            if (!removeOnIconTouch() && autoGoToBorder)
-                goToScreenBorder()
+            if (!removeIfInCloseZone() && autoGoToBorder)
+                goToScreenBorder(duration)
         }) { change, dragAmount ->
             change.consume()
+            cancelAnimation()
             val (x, y) = dragAmount.x.toInt() to dragAmount.y.toInt()
             params.x += x
             params.y += y
@@ -34,12 +35,12 @@ fun <T : FlyController> FlyViewInfo<T>.DraggableFlyView(
         }
     },
 ) {
-    LaunchedEffect(key1 = autoGoToBorder, block = { if(autoGoToBorder)goToScreenBorder() })
+    LaunchedEffect(key1 = autoGoToBorder, key2 = duration, block = { if (autoGoToBorder) goToScreenBorder(duration) })
     content()
 }
-private fun <T : FlyController> FlyViewInfo<T>.removeOnIconTouch(): Boolean {
+private fun <T : FlyController> FlyViewInfo<T>.removeIfInCloseZone(): Boolean {
     var out = false
-    if (params.y > Resources.getSystem().displayMetrics.heightPixels / 6) {
+    if (isInCloseZone(params.y)) {
         removeView()
         out = true
     }
