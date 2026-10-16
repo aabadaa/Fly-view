@@ -8,8 +8,13 @@ import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import com.abada.flyView.FlyController
 import com.abada.flyView.FlyViewInfo
+import com.abada.flyView.NoController
 
+/** The views added by the user, the close view is tracked separately so keys can't collide with it */
 internal val showedViews: MutableMap<String, FlyViewInfo<out FlyController>> = mutableMapOf()
+
+/** The overlay shown at the bottom of the screen while a view is dragged to the removal zone */
+internal var closeView: FlyViewInfo<NoController>? = null
 
 private const val CLOSE_ZONE_DIVISOR = 6
 
@@ -20,7 +25,7 @@ internal fun closeZoneHeight(): Int = Resources.getSystem().displayMetrics.heigh
 internal fun isInCloseZone(y: Int): Boolean = y > closeZoneHeight()
 
 internal fun hideCloseView() {
-    showedViews["close"]?.let { closeView ->
+    closeView?.let { closeView ->
         closeView.params.apply {
             width = 0
             height = 0
@@ -30,7 +35,7 @@ internal fun hideCloseView() {
 }
 
 internal fun showCloseView() {
-    showedViews["close"]?.let { closeView ->
+    closeView?.let { closeView ->
         closeView.params.apply {
             width = WindowManager.LayoutParams.MATCH_PARENT
             height = closeZoneHeight()

@@ -52,8 +52,8 @@ fun <T : FlyController> WindowManager.addFlyInfo(
     }
 
     if (showedViews.containsKey(key)) return false
-    if (!showedViews.containsKey("close")) {
-        val closeView = FlyViewInfo(NoController, params = WindowManager.LayoutParams(
+    if (closeView == null) {
+        val newCloseView = FlyViewInfo(NoController, params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -66,8 +66,8 @@ fun <T : FlyController> WindowManager.addFlyInfo(
         }) {
             closeViewContent()
         }
-        showedViews["close"] = closeView
-        closeView.addToWindowManager(context, "close", this,) {}
+        closeView = newCloseView
+        newCloseView.addToWindowManager(context, "close", this) {}
     }
     showedViews[key] = flyViewInfo
     flyViewInfo.addToWindowManager(context, key, this) {
@@ -90,14 +90,13 @@ fun <T : FlyController> WindowManager.addFlyInfo(
 fun WindowManager.removeFlyView(key: String) {
     showedViews.remove(key)?.let {
         hideCloseView()
-        it.flyView.run {
-            removeView(rootView)
-            this@removeFlyView.removeView(this)
-
-        }
+        removeView(it.flyView)
     }
-    if (showedViews.size == 1) {
-        removeFlyView("close")
+    if (showedViews.isEmpty()) {
+        closeView?.let {
+            closeView = null
+            removeView(it.flyView)
+        }
     }
 }
 
