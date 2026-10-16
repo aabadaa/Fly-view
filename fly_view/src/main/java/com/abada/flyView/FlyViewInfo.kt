@@ -51,6 +51,8 @@ data class FlyViewInfo<T : FlyController>(
     /** Function to remove the view from the WindowManager */
     lateinit var removeView: () -> Unit
 
+    private var isRemoving = false
+
     /**
      * Internal method to add this FlyView to the WindowManager.
      * Sets up the view hierarchy, lifecycle management, and event handling.
@@ -76,13 +78,17 @@ data class FlyViewInfo<T : FlyController>(
             }
         }
         removeView = {
-            CoroutineScope(Dispatchers.Main).launch {
-                params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                updateLayoutParams()
-                onRemove(this@FlyViewInfo)
-                delay(100.milliseconds)// if there is an animation the app will crash , so I delayed a little to wait the animation to finish
-                runRecomposeScope.cancel()
-                windowManager.removeFlyView(key)
+            // removal can be requested several times (close button, back, drag to bin); run it once
+            if (!isRemoving) {
+                isRemoving = true
+                CoroutineScope(Dispatchers.Main).launch {
+                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    updateLayoutParams()
+                    onRemove(this@FlyViewInfo)
+                    delay(100.milliseconds)// if there is an animation the app will crash , so I delayed a little to wait the animation to finish
+                    runRecomposeScope.cancel()
+                    windowManager.removeFlyView(key)
+                }
             }
         }
         flyView = FlyView(
