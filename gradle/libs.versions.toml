@@ -7,7 +7,6 @@ core-ktx = "1.16.0"
 lifecycle-runtime-ktx = "2.9.1"
 activity-compose = "1.10.1"
 compose-bom = "2025.06.01"
-material = "1.8.3"
 dependency-analysis = "3.9.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }

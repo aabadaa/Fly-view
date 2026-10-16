@@ -9,14 +9,11 @@ android {
 
     defaultConfig {
         minSdk = 26
-
-        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     // the bytecode level stays at 17 so apps that still build with JDK 17 can use the library

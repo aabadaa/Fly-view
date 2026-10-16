@@ -262,7 +262,7 @@ The math and the state machines have no Android dependency and run as plain JVM 
 
 v2 replaced the v1 API (`FlyViews`, `FlyViewInfo`, `DraggableFlyView`, `FlyViewService`, `FlyController`). Every old API and its replacement: [docs/migration-v1-to-v2.md](docs/migration-v1-to-v2.md).
 
-The design notes behind the new API: [docs/design-v2.md](docs/design-v2.md).
+How it works inside, the decisions, and what is not verified yet: [docs/architecture.md](docs/architecture.md).
 
 # License
 ```xml
