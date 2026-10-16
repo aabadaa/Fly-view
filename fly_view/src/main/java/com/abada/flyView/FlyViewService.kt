@@ -15,6 +15,7 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.abada.flyView.FlyViewService.Companion.show
 import com.abada.flyView.windowManagerUtils.addFlyInfo
+import com.abada.flyView.windowManagerUtils.showedViews
 import com.abada.flyView.windowManagerUtils.updateFlyView
 
 /**
@@ -48,11 +49,10 @@ abstract class FlyViewService : Service() {
         val notification: Notification = NotificationCompat.Builder(this, ID).build()
         val key = intent!!.getStringExtra("key")!!
         startForeground(1, notification)
-        showView(key)
+        if (showView(key)) numberOfShowedViews++
         intent.extras?.let {
             updateFlyView(key, it)
         }
-        numberOfShowedViews++
 
         return START_STICKY_COMPATIBILITY
     }
@@ -71,11 +71,13 @@ abstract class FlyViewService : Service() {
      * Retrieves the FlyViewInfo from infoProviders and adds it to the WindowManager.
      *
      * @param key The identifier for the FlyView to show
+     * @return true if a new view was added, false if the key is already shown
      */
     private fun showView(
         key: String
-    ) {
-        (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
+    ): Boolean {
+        if (showedViews.containsKey(key)) return false
+        return (infoProviders[key]!!.invoke() as FlyViewInfo<FlyController>).run {
             val onRemove = onRemove
             wm.addFlyInfo(this@FlyViewService, key, this.copy(onRemove = {
                 onRemove()

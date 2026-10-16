@@ -33,19 +33,20 @@ import com.abada.flyView.NoController
  * @param context Any context to create a [android.view.View] object
  * @param key A string to identify your view, used when you want to update it using [updateFlyView] method or remove it using [removeFlyView]
  * @param flyViewInfo The info of your fly view that holds your view and your controller
+ * @return true if the view was added, false if a view with the same [key] is already shown
  */
 fun <T : FlyController> WindowManager.addFlyInfo(
     context: Context,
     key: String,
     flyViewInfo: FlyViewInfo<T>
-) {
+): Boolean {
     if (!Settings.canDrawOverlays(context)) context.startActivity(Intent(
         Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${context.packageName}".toUri()
     ).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK
     })
 
-    if (showedViews.containsKey(key)) return
+    if (showedViews.containsKey(key)) return false
     if (!showedViews.containsKey("close")) {
         val closeView = FlyViewInfo(NoController, params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -71,6 +72,7 @@ fun <T : FlyController> WindowManager.addFlyInfo(
             hideCloseView()
         }
     }
+    return true
 }
 
 
