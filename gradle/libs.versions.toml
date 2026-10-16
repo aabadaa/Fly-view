@@ -1,14 +1,14 @@
 [versions]
 coroutines = "1.10.2"
 junit = "4.13.2"
-kotlin = "2.2.0"
-android-gradle-plugin = "8.11.0"
+kotlin = "2.4.21"
+android-gradle-plugin = "9.4.0"
 core-ktx = "1.16.0"
 lifecycle-runtime-ktx = "2.9.1"
 activity-compose = "1.10.1"
 compose-bom = "2025.06.01"
 material = "1.8.3"
-dependency-analysis = "2.19.0"
+dependency-analysis = "3.9.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
@@ -31,7 +31,6 @@ androidx-compose-foundation-layout = { group = "androidx.compose.foundation", na
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependency-analysis" }
 maven-publish = { id = "maven-publish" }

@@ -192,6 +192,7 @@ The math and the state machines have no Android dependency and run as plain JVM 
 ## Building
 
 - The wrapper uses **Gradle 9.8.0**, and Gradle runs on **JDK 21**: [`gradle/gradle-daemon-jvm.properties`](gradle/gradle-daemon-jvm.properties) asks for it (Gradle Daemon toolchain) and the Foojay plugin in `settings.gradle` downloads it if it is not installed. Update it with `./gradlew updateDaemonJvm --jvm-version=<n>`.
+- AGP 9.4.0 with Kotlin 2.4.21: Kotlin is built into AGP 9, so the modules do not apply `kotlin-android` any more (`kotlin { compilerOptions { } }` replaces `kotlinOptions`).
 - The library keeps Java 17 bytecode, so apps that still build with JDK 17 can use it.
 - Unit tests of the core: `./gradlew :fly_view:testDebugUnitTest`.
 

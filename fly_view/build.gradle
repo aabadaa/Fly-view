@@ -1,16 +1,14 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.maven.publish)
 }
 android {
-    namespace 'com.abada.flyview'
-    compileSdk 35
+    namespace = 'com.abada.flyview'
+    compileSdk = 35
 
     defaultConfig {
-        minSdk 26
-        targetSdk 35
+        minSdk = 26
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -24,14 +22,23 @@ android {
     // the bytecode level stays at 17 so apps that still build with JDK 17 can use the library
     // (the build itself runs on JDK 21, see gradle/gradle-daemon-jvm.properties)
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = '17'
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
-        compose true
+        compose = true
+    }
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+// Kotlin is built into AGP 9: it replaces the old kotlinOptions block
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

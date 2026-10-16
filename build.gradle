@@ -6,7 +6,9 @@ buildscript {
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.kotlin.android) apply false
+    // AGP 9 has Kotlin built in: there is no kotlin-android plugin any more. The compose plugin below
+    // puts the Kotlin Gradle plugin of the catalog version on the classpath, AGP uses that one.
+    alias(libs.plugins.kotlin.compose) apply false
 
     //https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin
     alias(libs.plugins.dependency.analysis)
