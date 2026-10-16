@@ -1,6 +1,8 @@
 package com.abada.flyview
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,14 +40,16 @@ fun ExpandableWindow() {
                 modifier = Modifier
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color.LightGray)
-                    .animateContentSize()
                     .padding(8.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = if (expanded) "Panel" else "Count $count", modifier = Modifier.padding(horizontal = 12.dp))
                     Button(onClick = { CounterState.expanded.update { !it } }) { Text(if (expanded) "Collapse" else "Expand") }
                 }
-                if (expanded) {
+                // A window is a real window: the system resizes it a frame after the content, so animating the
+                // size (animateContentSize, expand/shrink) re-wraps the text and clips the content on every step.
+                // Fade instead: the window resizes once and the content fades.
+                AnimatedVisibility(visible = expanded, enter = fadeIn(), exit = fadeOut()) {
                     Column(modifier = Modifier.width(240.dp).padding(top = 8.dp)) {
                         Text("Drag me anywhere, the window follows the finger.")
                         Row(verticalAlignment = Alignment.CenterVertically) {
