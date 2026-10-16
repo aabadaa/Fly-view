@@ -193,7 +193,14 @@ internal class FlyWindowRuntime(
         }
         flyView = view
         applyFrame()
-        windowManager.addView(view, params)
+        try {
+            windowManager.addView(view, params)
+        } catch (e: RuntimeException) {
+            // the permission can be revoked at any time: don't stay "attached" with a view that has no window
+            flyView = null
+            view.dispose()
+            throw e
+        }
         added = true
         if (isFloating() && this::state.isInitialized) {
             if (state.savedPosition() != null) placeSaved(animated = false) else initialPlacement()

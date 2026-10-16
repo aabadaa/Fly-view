@@ -98,21 +98,26 @@ internal object FlyOverlayHost {
         windowManager = wm
         foreground = isOnScreen()
         startedActivities = 0
+        val view = FlyView(application, content = { HostContent() })
+        try {
+            wm.addView(
+                view,
+                WindowManager.LayoutParams(
+                    1, 1,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSPARENT
+                ).also { it.gravity = Gravity.TOP or Gravity.START }
+            )
+        } catch (e: RuntimeException) {
+            // nothing is registered yet, so a retry starts from a clean state
+            view.dispose()
+            throw e
+        }
         application.registerActivityLifecycleCallbacks(activityCallbacks)
         application.registerComponentCallbacks(componentCallbacks)
-
-        val view = FlyView(application, content = { HostContent() })
-        wm.addView(
-            view,
-            WindowManager.LayoutParams(
-                1, 1,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSPARENT
-            ).also { it.gravity = Gravity.TOP or Gravity.START }
-        )
         hostView = view
         hadWanted = false
         isRunning = true

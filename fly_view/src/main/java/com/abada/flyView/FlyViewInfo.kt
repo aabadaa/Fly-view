@@ -164,7 +164,12 @@ class FlyViewInfo<T : FlyController>(
                 if (r - l != oldR - oldL || b - t != oldB - oldT) onWindowSizeChanged()
             }
         }
-        windowManager.addView(flyView, params)
+        try {
+            windowManager.addView(flyView, params)
+        } catch (e: RuntimeException) {
+            flyView.dispose()
+            throw e
+        }
         attached = true
     }
 
