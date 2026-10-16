@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.setViewTreeOnBackPressedDispatcherOwner
@@ -99,6 +100,22 @@ internal class FlyView(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (!disposed) lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+    }
+
+    /**
+     * The last pointer position in screen coordinates. It comes from the raw touch event, so it does not
+     * depend on where the window is: while a window is dragged it moves under the finger, and a position
+     * made of the window location plus a local position is wrong because both are updated at different times.
+     */
+    var pointerX = 0f
+        private set
+    var pointerY = 0f
+        private set
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        pointerX = event.rawX
+        pointerY = event.rawY
+        return super.dispatchTouchEvent(event)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

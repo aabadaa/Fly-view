@@ -507,12 +507,9 @@ internal class FlyWindowRuntime(
 
     val canDrag: Boolean get() = isAttached && isFloating() && config.drag != FlyDrag.None
 
-    fun screenLocation(local: androidx.compose.ui.geometry.Offset): androidx.compose.ui.geometry.Offset {
-        val view = flyView ?: return local
-        val location = IntArray(2)
-        view.getLocationOnScreen(location)
-        return androidx.compose.ui.geometry.Offset(location[0] + local.x, location[1] + local.y)
-    }
+    /** The pointer in screen pixels, `null` if the window is not shown */
+    fun pointerOnScreen(): androidx.compose.ui.geometry.Offset? =
+        flyView?.let { androidx.compose.ui.geometry.Offset(it.pointerX, it.pointerY) }
 
     fun beginDrag() {
         if (!canDrag || hiddenByDismiss || coordinator.state != DismissCoordinator.State.Idle) return
