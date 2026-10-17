@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.widget.FrameLayout
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.setViewTreeOnBackPressedDispatcherOwner
@@ -44,14 +45,42 @@ internal class FlyView(
     /** Called for the back button when no back handler of the content is enabled */
     private val onBackFallback: (() -> Unit)? = null,
     private val content: @Composable () -> Unit,
-) : AbstractComposeView(context, null, 0), SavedStateRegistryOwner {
+) : FrameLayout(context), SavedStateRegistryOwner {
+
+    /** The compose host, a child so that this view decides how it is measured */
+    private val host = object : AbstractComposeView(context, null, 0) {
+        @Composable
+        override fun Content() {
+            content()
+        }
+    }
 
     /** Called when the device configuration changes (rotation, folding, ...) */
     var onConfigChanged: (() -> Unit)? = null
 
-    @Composable
-    override fun Content() {
-        content()
+    /**
+     * While `true` the content is measured against the display instead of the window. The window is then
+     * free to be larger or smaller than the content for a moment (see `FlyWindowRuntime`), and the content
+     * does not wrap again to a size the window has not reached yet.
+     */
+    var measureAgainstDisplay = false
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+        }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (measureAgainstDisplay) {
+            val metrics = resources.displayMetrics
+            host.measure(
+                MeasureSpec.makeMeasureSpec(metrics.widthPixels, MeasureSpec.AT_MOST),
+                MeasureSpec.makeMeasureSpec(metrics.heightPixels, MeasureSpec.AT_MOST),
+            )
+            setMeasuredDimension(host.measuredWidth, host.measuredHeight)
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        }
     }
 
     //lifecycle
@@ -86,15 +115,16 @@ internal class FlyView(
         setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
             override val viewModelStore: ViewModelStore get() = store
         })
+        addView(host, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
         if (recomposer != null) {
-            compositionContext = recomposer
+            host.compositionContext = recomposer
             recomposeScope.launch {
                 recomposer.runRecomposeAndApplyChanges()
             }
         } else {
-            compositionContext = parentContext
+            host.compositionContext = parentContext
         }
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+        host.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
     }
 
     override fun onAttachedToWindow() {
@@ -127,7 +157,7 @@ internal class FlyView(
     fun dispose() {
         if (disposed) return
         disposed = true
-        disposeComposition()
+        host.disposeComposition()
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         recomposer?.cancel()
         recomposeScope.cancel()
