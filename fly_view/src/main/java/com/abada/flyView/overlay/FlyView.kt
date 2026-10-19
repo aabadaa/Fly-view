@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.WindowInsets
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.compositionContext
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.ViewModelStore
@@ -130,6 +132,18 @@ internal class FlyView(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (!disposed) lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+    }
+
+    /**
+     * Called with the window insets every time they are dispatched. It is a member and not an
+     * `OnApplyWindowInsetsListener` of the view: that listener is not called for this window on some
+     * devices, while the dispatch always reaches the view.
+     */
+    var onWindowInsets: ((WindowInsetsCompat) -> Unit)? = null
+
+    override fun dispatchApplyWindowInsets(insets: WindowInsets): WindowInsets {
+        onWindowInsets?.invoke(WindowInsetsCompat.toWindowInsetsCompat(insets, this))
+        return super.dispatchApplyWindowInsets(insets)
     }
 
     /**
