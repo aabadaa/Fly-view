@@ -28,8 +28,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FLyViewTheme {
-                MainScreen(onShow = ::showCounter, onShowExpandable = ::showExpandable, onHide = { FlyOverlay.requestDismiss("counter") })
+                MainScreen(onShow = ::showCounter, onShowExpandable = ::showExpandable, onShowPlayground = ::showPlayground, onHide = { FlyOverlay.requestDismiss("counter") })
             }
+        }
+    }
+
+    private fun showPlayground() {
+        lifecycleScope.launch {
+            val allowed = FlyOverlay.hasPermission(this@MainActivity) ||
+                    FlyOverlay.requestPermission(this@MainActivity)
+            if (!allowed) return@launch
+            CounterState.isPlaygroundOpen.value = true
+            FlyOverlay.start(this@MainActivity)
         }
     }
 
@@ -56,7 +66,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreen(onShow: () -> Unit, onShowExpandable: () -> Unit, onHide: () -> Unit) {
+private fun MainScreen(onShow: () -> Unit, onShowExpandable: () -> Unit, onShowPlayground: () -> Unit, onHide: () -> Unit) {
     // the floating window reads the same state: press + here or there, both show the same number
     val count by CounterState.count.collectAsState()
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -70,6 +80,7 @@ private fun MainScreen(onShow: () -> Unit, onShowExpandable: () -> Unit, onHide:
             Button(onClick = { CounterState.count.update { it + 1 } }) { Text("+1") }
             Button(onClick = onShow) { Text("Show the floating counter") }
             Button(onClick = onShowExpandable) { Text("Show the expandable window") }
+            Button(onClick = onShowPlayground) { Text("Show the keyboard + gesture playground") }
             Button(onClick = onHide) { Text("Hide it") }
             Text("Go to another app: the counter stays on top.", style = MaterialTheme.typography.bodyMedium)
         }

@@ -25,6 +25,7 @@ import com.abada.flyView.core.DockEdge
 import com.abada.flyView.core.Dim
 import com.abada.flyView.core.EdgeSide
 import com.abada.flyView.core.FlyPoint
+import com.abada.flyView.core.ImePolicy
 import com.abada.flyView.core.FlyRect
 import com.abada.flyView.core.FlySizePx
 import com.abada.flyView.core.FlyVelocity
@@ -38,7 +39,6 @@ import com.abada.flyView.core.SnapPolicy
 import com.abada.flyView.core.VAnchor
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Everything a window is configured with, compared on every recomposition */
@@ -554,7 +554,7 @@ internal class FlyWindowRuntime(
         if (!visible) {
             imeTop = null
         } else if (overlap > 0 && isAttached) {
-            imeTop = currentAbs().y + windowSize.height - overlap
+            imeTop = ImePolicy.keyboardTop(currentAbs().y + windowSize.height, overlap)
         }
         applyImeShift()
     }
@@ -594,7 +594,7 @@ internal class FlyWindowRuntime(
     private fun shiftFor(abs: FlyPoint): Int {
         val top = imeTop
         if (!isAttached || !isFloating() || config.ime != FlyIme.Avoid || dragging || !imeVisible || top == null) return 0
-        return (abs.y + windowSize.height - top).coerceIn(0, max(0, abs.y))
+        return ImePolicy.shift(abs.y, windowSize.height, top)
     }
 
     /** Places the window again so the keyboard shift matches the current keyboard, size and position */
@@ -638,7 +638,7 @@ internal class FlyWindowRuntime(
         val over = zone != null && SnapPolicy.isOverDismissZone(abs, size, display.toCore(), zone.heightFraction)
         // the window can't be dragged behind the keyboard, except into the dismiss zone
         val limit = imeLimit()
-        setPosition(if (!over && limit != null) abs.copy(y = min(abs.y, limit - size.height)) else abs, null)
+        setPosition(if (!over && limit != null) abs.copy(y = ImePolicy.limitTop(abs.y, size.height, limit)) else abs, null)
         if (zone == null) return
         if (over != state.isOverDismissZone) {
             state.isOverDismissZone = over

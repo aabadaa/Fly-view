@@ -17,5 +17,9 @@ class FlyApp : Application() {
             val open by CounterState.isExpandableOpen.collectAsState()
             if (open) ExpandableWindow()
         }
+        FlyOverlay.contribute("playground") {
+            val open by CounterState.isPlaygroundOpen.collectAsState()
+            if (open) PlaygroundWindow()
+        }
     }
 }

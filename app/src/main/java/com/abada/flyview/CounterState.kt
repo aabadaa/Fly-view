@@ -11,4 +11,5 @@ object CounterState {
     val isOpen = MutableStateFlow(false)
     val isExpandableOpen = MutableStateFlow(false)
     val expanded = MutableStateFlow(false)
+    val isPlaygroundOpen = MutableStateFlow(false)
 }

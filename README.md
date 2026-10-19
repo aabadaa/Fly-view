@@ -247,6 +247,8 @@ The math and the state machines have no Android dependency and run as plain JVM 
 | Core (pure Kotlin) | `com.abada.flyView.core` | JUnit + `kotlinx-coroutines-test`, no emulator |
 | Windows (Compose + WindowManager) | `com.abada.flyView.overlay` | on a device or emulator (`compose-ui-test`), the sample app is the manual test |
 
+**Keyboard** rules are numbers too (`ImePolicy`, [`ImePolicyTest`](fly_view/src/test/java/com/abada/flyView/core/ImePolicyTest.kt)): a window under the keyboard is lifted by its hidden part, a tall one too, never above the screen, and the shift changes when the window is resized. **By hand**: the sample's [playground window](app/src/main/java/com/abada/flyview/PlaygroundWindow.kt) has a text field and a panel you pinch or double tap to change the layout while the keyboard is open: the window must stay above the keyboard as it grows and come back down as it shrinks.
+
 ## Building
 
 - The wrapper uses **Gradle 9.8.0**, and Gradle runs on **JDK 21**: [`gradle/gradle-daemon-jvm.properties`](gradle/gradle-daemon-jvm.properties) asks for it (Gradle Daemon toolchain) and the Foojay plugin in `settings.gradle` downloads it if it is not installed. Update it with `./gradlew updateDaemonJvm --jvm-version=<n>`.
