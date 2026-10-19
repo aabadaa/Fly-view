@@ -38,6 +38,7 @@ import com.abada.flyView.core.SnapPolicy
 import com.abada.flyView.core.VAnchor
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Everything a window is configured with, compared on every recomposition */
@@ -47,7 +48,7 @@ internal data class WindowConfig(
     val snap: FlySnap = FlySnap.Edges(),
     val dismissZone: DismissZone? = DismissZone(),
     val placement: FlyPlacement = FlyPlacement.Floating,
-    val ime: FlyIme = FlyIme.Ignore,
+    val ime: FlyIme = FlyIme.Avoid,
 )
 
 /**
@@ -506,6 +507,10 @@ internal class FlyWindowRuntime(
         applyImeShift()
     }
 
+    /** The lowest the window bottom may go while the keyboard is open, null when there is no limit */
+    private fun imeLimit(): Int? =
+        if (isFloating() && config.ime == FlyIme.Avoid && imeVisible) imeTop else null
+
     /** How far up the window has to be lifted to stay above the keyboard at the absolute position [abs] */
     private fun shiftFor(abs: FlyPoint): Int {
         val top = imeTop
@@ -553,9 +558,12 @@ internal class FlyWindowRuntime(
             ),
             size, display.toCore(),
         )
-        setPosition(abs, null)
-        val zone = config.dismissZone ?: return
-        val over = SnapPolicy.isOverDismissZone(abs, size, display.toCore(), zone.heightFraction)
+        val zone = config.dismissZone
+        val over = zone != null && SnapPolicy.isOverDismissZone(abs, size, display.toCore(), zone.heightFraction)
+        // the window can't be dragged behind the keyboard, except into the dismiss zone
+        val limit = imeLimit()
+        setPosition(if (!over && limit != null) abs.copy(y = min(abs.y, limit - size.height)) else abs, null)
+        if (zone == null) return
         if (over != state.isOverDismissZone) {
             state.isOverDismissZone = over
             DismissOverlay.setHovered(over)

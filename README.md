@@ -79,7 +79,7 @@ That is all: the window floats over other apps, can be dragged (it snaps to the 
 | Take control of the dismissal | `FlyDismissEffect { ...; dismiss() }` |
 | One position per mode | `rememberFlyWindowState(key)` once per mode, pass the one you want |
 | Dock to an edge | `placement = FlyPlacement.Docked(FlyEdge.Bottom, FlySize.Fill)` |
-| Stay above the keyboard | `ime = FlyIme.Avoid` |
+| Stay above the keyboard | default (`ime = FlyIme.Avoid`) |
 | A dialog | `FlyDialog(onDismissRequest) { }` |
 | A ViewModel for the window session | `rememberFlyViewModel { MyViewModel() }` |
 | Start from a widget / tile (Android 12+) | subclass `FlyLaunchActivity` |
@@ -102,7 +102,7 @@ All calls: main thread.
 | `snap` | `Edges()` | `FlySnap.None`, or `Edges(padding, durationMillis)` |
 | `dismissZone` | `DismissZone()` | the area at the bottom where it is dropped, `null` = off |
 | `placement` | `Floating` | see below |
-| `ime` | `Ignore` | `Avoid` keeps it above the keyboard |
+| `ime` | `Avoid` | `Avoid` keeps it above the keyboard (can't be dragged behind it), `Ignore` lets the keyboard cover it |
 | `hideWhenEmpty` | `false` | hides when no `FlyItem` is contributed |
 | `onDismissRequest` | `null` | commit a dismissal: update your state here |
 | `onRemoved` | `null` | the window has gone after `visible = false` |
@@ -214,7 +214,7 @@ FlyWindow("note", focusable = true,
     ime = FlyIme.Avoid)               // a bar above the keyboard
 ```
 
-`ime = Avoid`: a docked-bottom or fullscreen window resizes, a floating one moves up while the keyboard shows (Android 11+). It needs `focusable = true`.
+`ime = Avoid` (default, like v1): a docked-bottom or fullscreen window resizes, a floating one moves up while the keyboard shows and can't be dragged behind it (Android 11+). Typing needs `focusable = true`. Use `FlyIme.Ignore` to let the keyboard cover the window.
 
 ## Service and lifetime
 

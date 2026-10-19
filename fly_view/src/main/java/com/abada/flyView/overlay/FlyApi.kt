@@ -59,8 +59,9 @@ enum class FlyIme {
     Ignore,
 
     /**
-     * Stay above the keyboard. A docked bottom window or a fullscreen one resizes. A floating window
-     * moves up while the keyboard is visible (Android 11+). The window needs `focusable = true`.
+     * Stay above the keyboard (the default). A docked bottom window or a fullscreen one resizes. A
+     * floating window moves up while the keyboard is visible (Android 11+) and can't be dragged behind
+     * it, except into the dismiss zone. Typing needs `focusable = true`.
      */
     Avoid,
 }
