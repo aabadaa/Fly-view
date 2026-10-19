@@ -173,7 +173,7 @@ fun FlyWindow(
     snap: FlySnap = FlySnap.Edges(),
     dismissZone: DismissZone? = DismissZone(),
     placement: FlyPlacement = FlyPlacement.Floating,
-    ime: FlyIme = FlyIme.Avoid,
+    ime: FlyIme = FlyIme.Ignore,
     hideWhenEmpty: Boolean = false,
     enter: EnterTransition = fadeIn(),
     exit: ExitTransition = fadeOut(),

@@ -41,7 +41,7 @@ Screen (an activity)            -> FlyWindow / FlyItem -> composed in the screen
 | Errors | `FlyOverlay.start` throws (`OverlayPermissionException`, `FlyServiceStartException`), a window composed before `start` throws `FlyOverlayNotStartedException` | the developer asks for the permission first, no silent fallback |
 | Service | An optional keep-alive for the process (priority and notification), not an owner of the windows. The overlay and the service stop when no window is alive | an overlay-only process can be killed in the background |
 | Lifecycle | A window has a `LifecycleOwner`: `RESUMED` when added, `DESTROYED` when removed. `FlyWindowState.isShown` and `hiddenReason` for observers outside | no `onShown`/`onHidden` callbacks needed |
-| Keyboard | `ime = FlyIme.Avoid` (default): docked bottom and fullscreen resize, a floating window moves up and can't be dragged behind the keyboard (Android 11+). The keyboard is watched by `ImeProbe`, an invisible untouchable display-tall 1 px window, because a window's own insets only cover the part the keyboard overlaps | needs `focusable = true` |
+| Keyboard | `ime = FlyIme.Avoid`: docked bottom and fullscreen resize, a floating window moves up (Android 11+) | needs `focusable = true` |
 | Keys | `onKeyEvent` sees every key first, then the content's Compose key modifiers, then the back handling | fixes device quirks (a key reported as Back) |
 | Requests from outside | `Channel` + `send`, not `SharedFlow` | a `SharedFlow` drops a value when nobody collects yet |
 | Minimum API | 26 | the overlay window type needs it |

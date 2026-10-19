@@ -79,7 +79,7 @@ That is all: the window floats over other apps, can be dragged (it snaps to the 
 | Take control of the dismissal | `FlyDismissEffect { ...; dismiss() }` |
 | One position per mode | `rememberFlyWindowState(key)` once per mode, pass the one you want |
 | Dock to an edge | `placement = FlyPlacement.Docked(FlyEdge.Bottom, FlySize.Fill)` |
-| Stay above the keyboard | default (`ime = FlyIme.Avoid`) |
+| Stay above the keyboard | `ime = FlyIme.Avoid` |
 | A dialog | `FlyDialog(onDismissRequest) { }` |
 | A ViewModel for the window session | `rememberFlyViewModel { MyViewModel() }` |
 | Start from a widget / tile (Android 12+) | subclass `FlyLaunchActivity` |
@@ -102,7 +102,7 @@ All calls: main thread.
 | `snap` | `Edges()` | `FlySnap.None`, or `Edges(padding, durationMillis)` |
 | `dismissZone` | `DismissZone()` | the area at the bottom where it is dropped, `null` = off |
 | `placement` | `Floating` | see below |
-| `ime` | `Avoid` | `Avoid` keeps it above the keyboard (can't be dragged behind it), `Ignore` lets the keyboard cover it |
+| `ime` | `Ignore` | `Avoid` keeps it above the keyboard |
 | `hideWhenEmpty` | `false` | hides when no `FlyItem` is contributed |
 | `onDismissRequest` | `null` | commit a dismissal: update your state here |
 | `onRemoved` | `null` | the window has gone after `visible = false` |
@@ -214,7 +214,7 @@ FlyWindow("note", focusable = true,
     ime = FlyIme.Avoid)               // a bar above the keyboard
 ```
 
-`ime = Avoid` (default, like v1): a docked-bottom or fullscreen window resizes, a floating one moves up while the keyboard shows and can't be dragged behind it (Android 11+). Typing needs `focusable = true`. Use `FlyIme.Ignore` to let the keyboard cover the window.
+`ime = Avoid`: a docked-bottom or fullscreen window resizes, a floating one moves up while the keyboard shows (Android 11+). It needs `focusable = true`.
 
 ## Service and lifetime
 
@@ -247,7 +247,7 @@ The math and the state machines have no Android dependency and run as plain JVM 
 | Core (pure Kotlin) | `com.abada.flyView.core` | JUnit + `kotlinx-coroutines-test`, no emulator |
 | Windows (Compose + WindowManager) | `com.abada.flyView.overlay` | on a device or emulator (`compose-ui-test`), the sample app is the manual test |
 
-**Keyboard** rules are numbers too (`ImePolicy`, [`ImePolicyTest`](fly_view/src/test/java/com/abada/flyView/core/ImePolicyTest.kt)): a window under the keyboard is lifted by its hidden part, a tall one too, never above the screen, and the shift changes when the window is resized. **By hand**: the sample's [playground window](app/src/main/java/com/abada/flyview/PlaygroundWindow.kt) has a text field and a panel you pinch or double tap to change the layout while the keyboard is open: the window must stay above the keyboard as it grows and come back down as it shrinks.
+**By hand**: the sample's [playground window](app/src/main/java/com/abada/flyview/PlaygroundWindow.kt) has a text field and a panel you pinch or double tap to change the layout while the keyboard is open: the window must stay above the keyboard as it grows and come back down as it shrinks.
 
 ## Building
 

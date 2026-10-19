@@ -19,9 +19,6 @@ fun Modifier.flyDragHandle(): Modifier = composed {
     pointerInput(runtime) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
-            // measured from the touch down, not from where the slop is crossed, so the window
-            // does not trail the finger by the slop distance
-            val downPointer = runtime.pointerOnScreen()
             val slop = awaitTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
                 ?: return@awaitEachGesture
             if (!runtime.canDrag) return@awaitEachGesture
@@ -29,12 +26,9 @@ fun Modifier.flyDragHandle(): Modifier = composed {
             // The window moves under the finger, so the pointer is the raw screen position of the touch
             // event: a local position (or the window location plus one) is wrong as soon as the window moves.
             runtime.beginDrag()
-            val slopPointer = runtime.pointerOnScreen() ?: return@awaitEachGesture
-            val startPointer = downPointer ?: slopPointer
+            val startPointer = runtime.pointerOnScreen() ?: return@awaitEachGesture
             val tracker = VelocityTracker()
-            tracker.addPosition(down.uptimeMillis, startPointer)
-            tracker.addPosition(slop.uptimeMillis, slopPointer)
-            runtime.dragBy(slopPointer.x - startPointer.x, slopPointer.y - startPointer.y)
+            tracker.addPosition(slop.uptimeMillis, startPointer)
             drag(slop.id) { change ->
                 val pointer = runtime.pointerOnScreen() ?: return@drag
                 change.consume()

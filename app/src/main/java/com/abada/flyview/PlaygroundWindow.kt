@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.abada.flyView.overlay.FlyIme
 import com.abada.flyView.overlay.FlyWindow
 import com.abada.flyview.ui.theme.FLyViewTheme
 
@@ -46,6 +47,7 @@ fun PlaygroundWindow() {
     FlyWindow(
         key = "playground",
         focusable = true, // needed to type
+        ime = FlyIme.Avoid, // lift the window above the keyboard
         onDismissRequest = { CounterState.isPlaygroundOpen.value = false },
     ) {
         var text by remember { mutableStateOf("") }

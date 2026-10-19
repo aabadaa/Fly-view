@@ -55,7 +55,6 @@ and collect them in the window. Do not use a `SharedFlow`, it drops the value wh
 |---|---|
 | `controller` | gone (see above) |
 | `onRemove = { ...; delay(400) }` | `FlyDismissEffect { ...; delay(400); dismiss() }` |
-| a v1 window never went behind the keyboard | same in v2: `ime = FlyIme.Avoid` is the default (`Ignore` to opt out) |
 | `params = LayoutParams(...)` | `placement`, `focusable`, `ime`, and `configure = { params -> }` for anything else |
 | `params.windowAnimations` | `enter = fadeIn()`, `exit = fadeOut()` (any Compose transition) |
 | `params.x` / `params.y` | `rememberFlyWindowState(key, initial = FlyPosition...)` |
