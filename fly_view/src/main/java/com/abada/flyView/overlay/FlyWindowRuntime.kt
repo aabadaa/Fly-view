@@ -115,7 +115,10 @@ internal class FlyWindowRuntime(
     private var dragStartX = 0
     private var dragStartY = 0
     private var pendingInitial = false
-    private var imeBottom = 0
+    private var imeVisible = false
+
+    /** Top of the keyboard in the same absolute space as the window position, null while unknown */
+    private var imeTop: Int? = null
     private var imeShift = 0
 
     val isAttached: Boolean get() = flyView != null
@@ -187,8 +190,10 @@ internal class FlyWindowRuntime(
             if (r - l != oldR - oldL || b - t != oldB - oldT) onWindowSizeChanged()
         }
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
-            imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            applyImeShift()
+            onImeInsets(
+                visible = insets.isVisible(WindowInsetsCompat.Type.ime()),
+                overlap = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom,
+            )
             insets
         }
         flyView = view
@@ -357,6 +362,7 @@ internal class FlyWindowRuntime(
     private fun place(abs: FlyPoint) {
         val m = mapper()
         val x = m.paramX(abs.x)
+        imeShift = shiftFor(abs)
         val y = m.paramY(abs.y - imeShift)
         if (params.x == x && params.y == y) return
         params.x = x
@@ -485,22 +491,32 @@ internal class FlyWindowRuntime(
 
     // keyboard
 
+    /**
+     * The inset a window receives only covers the part of it the keyboard overlaps, not the whole
+     * keyboard. The keyboard top is therefore worked out from where the window is now, and kept: once
+     * the window is lifted clear of the keyboard the overlap is 0 but the keyboard is still there.
+     */
+    private fun onImeInsets(visible: Boolean, overlap: Int) {
+        imeVisible = visible
+        if (!visible) {
+            imeTop = null
+        } else if (overlap > 0 && isAttached) {
+            imeTop = currentAbs().y + windowSize.height - overlap
+        }
+        applyImeShift()
+    }
+
+    /** How far up the window has to be lifted to stay above the keyboard at the absolute position [abs] */
+    private fun shiftFor(abs: FlyPoint): Int {
+        val top = imeTop
+        if (!isAttached || !isFloating() || config.ime != FlyIme.Avoid || dragging || !imeVisible || top == null) return 0
+        return (abs.y + windowSize.height - top).coerceIn(0, max(0, abs.y))
+    }
+
+    /** Places the window again so the keyboard shift matches the current keyboard, size and position */
     private fun applyImeShift() {
-        if (!isAttached || !isFloating() || config.ime != FlyIme.Avoid || dragging) {
-            if (imeShift != 0) {
-                imeShift = 0
-                state.savedPosition()?.let { place(it) }
-            }
-            return
-        }
-        val abs = state.savedPosition() ?: return
-        val display = windowManager.displayBounds(appContext)
-        val windowBottom = abs.y + windowSize.height
-        val shift = if (imeBottom > 0) max(0, windowBottom - (display.bottom - imeBottom)) else 0
-        if (shift != imeShift) {
-            imeShift = shift
-            place(abs)
-        }
+        if (!this::state.isInitialized) return
+        state.savedPosition()?.let { place(it) }
     }
 
     // drag
@@ -518,7 +534,6 @@ internal class FlyWindowRuntime(
         if (!canDrag || hiddenByDismiss || coordinator.state != DismissCoordinator.State.Idle) return
         animator?.cancel()
         dragging = true
-        imeShift = 0
         state.isDragging = true
         state.snappedSide = null
         dragStartX = params.x

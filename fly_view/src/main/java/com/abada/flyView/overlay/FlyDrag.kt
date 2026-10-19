@@ -26,9 +26,14 @@ fun Modifier.flyDragHandle(): Modifier = composed {
             // The window moves under the finger, so the pointer is measured in screen
             // coordinates, a local delta would be wrong as soon as the window moves.
             runtime.beginDrag()
-            val startPointer = runtime.screenLocation(slop.position)
+            // measured from the touch down, not from where the slop was crossed, so the window
+            // does not trail the finger by the slop distance
+            val startPointer = runtime.screenLocation(down.position)
             val tracker = VelocityTracker()
-            tracker.addPosition(slop.uptimeMillis, startPointer)
+            tracker.addPosition(down.uptimeMillis, startPointer)
+            val slopPointer = runtime.screenLocation(slop.position)
+            tracker.addPosition(slop.uptimeMillis, slopPointer)
+            runtime.dragBy(slopPointer.x - startPointer.x, slopPointer.y - startPointer.y)
             drag(slop.id) { change ->
                 val pointer = runtime.screenLocation(change.position)
                 change.consume()
