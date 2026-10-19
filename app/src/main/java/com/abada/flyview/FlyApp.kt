@@ -13,5 +13,9 @@ class FlyApp : Application() {
             val open by CounterState.isOpen.collectAsState()
             if (open) CounterWindow()
         }
+        FlyOverlay.contribute("expandable") {
+            val open by CounterState.isExpandableOpen.collectAsState()
+            if (open) ExpandableWindow()
+        }
     }
 }

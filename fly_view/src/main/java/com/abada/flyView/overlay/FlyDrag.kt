@@ -19,23 +19,24 @@ fun Modifier.flyDragHandle(): Modifier = composed {
     pointerInput(runtime) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
+            // measured from the touch down, not from where the slop is crossed, so the window
+            // does not trail the finger by the slop distance
+            val downPointer = runtime.pointerOnScreen()
             val slop = awaitTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
                 ?: return@awaitEachGesture
             if (!runtime.canDrag) return@awaitEachGesture
 
-            // The window moves under the finger, so the pointer is measured in screen
-            // coordinates, a local delta would be wrong as soon as the window moves.
+            // The window moves under the finger, so the pointer is the raw screen position of the touch
+            // event: a local position (or the window location plus one) is wrong as soon as the window moves.
             runtime.beginDrag()
-            // measured from the touch down, not from where the slop was crossed, so the window
-            // does not trail the finger by the slop distance
-            val startPointer = runtime.screenLocation(down.position)
+            val slopPointer = runtime.pointerOnScreen() ?: return@awaitEachGesture
+            val startPointer = downPointer ?: slopPointer
             val tracker = VelocityTracker()
             tracker.addPosition(down.uptimeMillis, startPointer)
-            val slopPointer = runtime.screenLocation(slop.position)
             tracker.addPosition(slop.uptimeMillis, slopPointer)
             runtime.dragBy(slopPointer.x - startPointer.x, slopPointer.y - startPointer.y)
             drag(slop.id) { change ->
-                val pointer = runtime.screenLocation(change.position)
+                val pointer = runtime.pointerOnScreen() ?: return@drag
                 change.consume()
                 tracker.addPosition(change.uptimeMillis, pointer)
                 runtime.dragBy(pointer.x - startPointer.x, pointer.y - startPointer.y)

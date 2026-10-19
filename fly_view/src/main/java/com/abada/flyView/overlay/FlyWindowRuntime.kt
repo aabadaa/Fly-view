@@ -123,6 +123,8 @@ internal class FlyWindowRuntime(
     /** Top of the keyboard in the same absolute space as the window position, null while unknown */
     private var imeTop: Int? = null
     private var imeShift = 0
+    private var holdWidth = 0
+    private var holdHeight = 0
 
     val isAttached: Boolean get() = flyView != null
 
@@ -192,7 +194,10 @@ internal class FlyWindowRuntime(
         )
         view.onConfigChanged = { reanchor() }
         view.addOnLayoutChangeListener { _, l, t, r, b, oldL, oldT, oldR, oldB ->
-            if (r - l != oldR - oldL || b - t != oldB - oldT) onWindowSizeChanged()
+            if (r - l != oldR - oldL || b - t != oldB - oldT) {
+                holdWhileResizing(oldR - oldL, oldB - oldT, r - l, b - t)
+                onWindowSizeChanged()
+            }
         }
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
             onImeInsets(
@@ -231,6 +236,9 @@ internal class FlyWindowRuntime(
             state.hiddenReason = reason ?: hiddenReasonTarget ?: FlyHiddenReason.Visibility
         }
         animator?.cancel()
+        view.removeCallbacks(releaseHold)
+        holdWidth = 0
+        holdHeight = 0
         if (dragging) endDragCleanup()
         syncProbe()
         try {
@@ -314,9 +322,46 @@ internal class FlyWindowRuntime(
             else -> WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         }
         configure?.invoke(params)
+        if (holdWidth > 0 && holdHeight > 0) applyHold()
         if (floating && this::state.isInitialized && isAttached) {
             state.savedPosition()?.let { place(it) }
         }
+    }
+
+    // smooth resize
+
+    /**
+     * A window is resized by the system a frame after its content, so a content that animates its size
+     * would be clipped or wrapped again on every frame. While the size keeps changing the window is held
+     * at the largest size it had (the content is measured against the display, not the window), and it
+     * goes back to wrapping its content when the size stays the same for a moment.
+     */
+    private fun holdWhileResizing(oldWidth: Int, oldHeight: Int, width: Int, height: Int) {
+        val view = flyView ?: return
+        if (!added || !isFloating() || pendingInitial || oldWidth <= 0 || oldHeight <= 0 || width <= 0 || height <= 0) return
+        holdWidth = max(holdWidth, max(oldWidth, width))
+        holdHeight = max(holdHeight, max(oldHeight, height))
+        view.measureAgainstDisplay = true
+        applyHold()
+        updateParams()
+        view.removeCallbacks(releaseHold)
+        view.postDelayed(releaseHold, HOLD_MILLIS)
+    }
+
+    private fun applyHold() {
+        params.width = holdWidth
+        params.height = holdHeight
+        // the window may reach beyond the screen edge while the content is snapped to it
+        params.flags = params.flags or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+    }
+
+    private val releaseHold = Runnable {
+        holdWidth = 0
+        holdHeight = 0
+        val view = flyView ?: return@Runnable
+        view.measureAgainstDisplay = false
+        applyFrame()
+        updateParams()
     }
 
     private fun gravity(h: HAnchor, v: VAnchor): Int =
@@ -562,12 +607,9 @@ internal class FlyWindowRuntime(
 
     val canDrag: Boolean get() = isAttached && isFloating() && config.drag != FlyDrag.None
 
-    fun screenLocation(local: androidx.compose.ui.geometry.Offset): androidx.compose.ui.geometry.Offset {
-        val view = flyView ?: return local
-        val location = IntArray(2)
-        view.getLocationOnScreen(location)
-        return androidx.compose.ui.geometry.Offset(location[0] + local.x, location[1] + local.y)
-    }
+    /** The pointer in screen pixels, `null` if the window is not shown */
+    fun pointerOnScreen(): androidx.compose.ui.geometry.Offset? =
+        flyView?.let { androidx.compose.ui.geometry.Offset(it.pointerX, it.pointerY) }
 
     fun beginDrag() {
         if (!canDrag || hiddenByDismiss || coordinator.state != DismissCoordinator.State.Idle) return
@@ -626,5 +668,6 @@ internal class FlyWindowRuntime(
 
     companion object {
         private const val TAG = "FlyWindow"
+        private const val HOLD_MILLIS = 150L
     }
 }
