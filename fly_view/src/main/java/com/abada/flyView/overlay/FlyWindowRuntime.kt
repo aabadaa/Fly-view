@@ -117,6 +117,8 @@ internal class FlyWindowRuntime(
     private var dragStartY = 0
     private var pendingInitial = false
     private var imeVisible = false
+    private var probing = false
+    private val probeListener: (Int?) -> Unit = { top -> onProbe(top) }
 
     /** Top of the keyboard in the same absolute space as the window position, null while unknown */
     private var imeTop: Int? = null
@@ -171,6 +173,8 @@ internal class FlyWindowRuntime(
         if (isAttached && changed) {
             applyFrame()
             updateParams()
+            syncProbe()
+            applyImeShift()
         }
     }
 
@@ -212,6 +216,7 @@ internal class FlyWindowRuntime(
             state.isShown = true
             state.hiddenReason = null
         }
+        syncProbe()
         if (isFloating() && this::state.isInitialized) {
             if (state.savedPosition() != null) placeSaved(animated = false) else initialPlacement()
         }
@@ -227,6 +232,7 @@ internal class FlyWindowRuntime(
         }
         animator?.cancel()
         if (dragging) endDragCleanup()
+        syncProbe()
         try {
             windowManager.removeView(view)
         } catch (e: IllegalArgumentException) {
@@ -498,6 +504,7 @@ internal class FlyWindowRuntime(
      * the window is lifted clear of the keyboard the overlap is 0 but the keyboard is still there.
      */
     private fun onImeInsets(visible: Boolean, overlap: Int) {
+        if (probing) return // the probe knows the whole keyboard, this window only a part of it
         imeVisible = visible
         if (!visible) {
             imeTop = null
@@ -505,6 +512,33 @@ internal class FlyWindowRuntime(
             imeTop = currentAbs().y + windowSize.height - overlap
         }
         applyImeShift()
+    }
+
+    /** The probe reports the keyboard top (null when closed) whatever this window overlaps */
+    private fun onProbe(top: Int?) {
+        imeVisible = top != null
+        imeTop = top
+        applyImeShift()
+    }
+
+    /** Watches the keyboard with the probe window while this one avoids it */
+    private fun syncProbe() {
+        val want = isAttached && isFloating() && config.ime == FlyIme.Avoid
+        if (want == probing) return
+        if (want) {
+            try {
+                ImeProbe.acquire(appContext, windowManager, probeListener)
+                probing = true
+            } catch (e: RuntimeException) {
+                Log.w(TAG, "keyboard probe not available, using the window insets", e)
+                ImeProbe.release(probeListener)
+            }
+        } else {
+            probing = false
+            ImeProbe.release(probeListener)
+            imeVisible = false
+            imeTop = null
+        }
     }
 
     /** The lowest the window bottom may go while the keyboard is open, null when there is no limit */
