@@ -26,6 +26,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
@@ -61,6 +68,9 @@ interface FlyWindowScope {
 val LocalFlyWindow = staticCompositionLocalOf<FlyWindowScope> {
     error("There is no FlyWindow around this composable")
 }
+
+/** Where the enclosing window is on the screen, asked when needed. `View.getLocationOnScreen` lags behind a moved window. */
+internal val LocalFlyWindowOrigin = staticCompositionLocalOf<(() -> androidx.compose.ui.geometry.Offset)?> { null }
 
 internal val LocalFlyDismissTarget = compositionLocalOf<DismissCoordinator?> { null }
 
@@ -243,6 +253,7 @@ fun FlyWindow(
                     CompositionLocalProvider(
                         LocalFlyWindow provides windowScope,
                         LocalFlyDismissTarget provides runtime.coordinator,
+                        LocalFlyWindowOrigin provides runtime::screenOrigin,
                     ) {
                         AnimatedVisibility(
                             visibleState = transition,
@@ -250,7 +261,8 @@ fun FlyWindow(
                             exit = currentExit,
                         ) {
                             val whole = if (currentDrag == FlyDrag.Whole) Modifier.flyDragHandle() else Modifier
-                            Box(modifier = whole) { windowScope.currentContent() }
+                            val outline = if (FlyOverlayHost.debugOutlines) Modifier.debugOutline(key) else Modifier
+                            Box(modifier = whole.then(outline)) { windowScope.currentContent() }
                         }
                     }
                 }
@@ -379,4 +391,18 @@ private fun Lifecycle.State.toLevel(): LifecycleLevel = when (this) {
     Lifecycle.State.INITIALIZED, Lifecycle.State.CREATED -> LifecycleLevel.Created
     Lifecycle.State.STARTED -> LifecycleLevel.Started
     Lifecycle.State.RESUMED -> LifecycleLevel.Resumed
+}
+
+/** The outline of `FlyOverlay.debugOutlines`: a stroke around the window and its key in the corner */
+private fun Modifier.debugOutline(key: String): Modifier = drawWithContent {
+    drawContent()
+    val stroke = 2.dp.toPx()
+    drawRect(Color.Magenta, topLeft = Offset(stroke / 2, stroke / 2),
+        size = Size(size.width - stroke, size.height - stroke), style = Stroke(stroke))
+    val paint = android.graphics.Paint().apply {
+        color = android.graphics.Color.MAGENTA
+        textSize = 10.dp.toPx()
+        isAntiAlias = true
+    }
+    drawContext.canvas.nativeCanvas.drawText(key, stroke * 2, stroke * 2 + paint.textSize, paint)
 }

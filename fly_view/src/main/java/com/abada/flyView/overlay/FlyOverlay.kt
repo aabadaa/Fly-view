@@ -34,6 +34,16 @@ import kotlin.coroutines.resume
  * [start] composes the contributions again.
  */
 object FlyOverlay {
+    /**
+     * Draws a thin outline and the key around every [FlyWindow], to see where the windows are (their
+     * real size, the transparent fullscreen layers of popups...). For debugging, off by default.
+     */
+    var debugOutlines: Boolean
+        get() = FlyOverlayHost.debugOutlines
+        set(value) {
+            FlyOverlayHost.debugOutlines = value
+        }
+
     /** `true` while the overlay runs */
     val isRunning: Boolean get() = FlyOverlayHost.isRunning
 

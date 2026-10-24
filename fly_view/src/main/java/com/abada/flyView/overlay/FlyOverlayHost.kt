@@ -57,6 +57,19 @@ internal object FlyOverlayHost {
     var closingReason by mutableStateOf<ClosingReason?>(null)
         private set
 
+    /** Draw an outline around every window, see `FlyOverlay.debugOutlines` */
+    var debugOutlines by mutableStateOf(false)
+
+    /** The top of the keyboard each window knows about, absolute screen pixels. A window only knows it while it is covered. */
+    private val keyboardTops = mutableStateMapOf<FlyWindowRuntime, Int>()
+
+    /** The top of the keyboard in screen pixels, `null` when it is closed or no window could measure it */
+    val keyboardTop: Int? get() = keyboardTops.values.minOrNull()
+
+    fun reportKeyboard(window: FlyWindowRuntime, top: Int?) {
+        if (top == null) keyboardTops.remove(window) else keyboardTops[window] = top
+    }
+
     var serviceClass: Class<out FlyService>? = null
     var stopWhenEmpty = true
     private var service: FlyService? = null

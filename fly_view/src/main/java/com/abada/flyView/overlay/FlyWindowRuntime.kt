@@ -236,6 +236,7 @@ internal class FlyWindowRuntime(
         if (dragging) endDragCleanup()
         imeVisible = false
         imeTop = null
+        FlyOverlayHost.reportKeyboard(this, null)
         try {
             windowManager.removeView(view)
         } catch (e: IllegalArgumentException) {
@@ -400,6 +401,10 @@ internal class FlyWindowRuntime(
         )
     }
 
+    /** Where the window really is on the screen now (the position that was applied, the keyboard lift included) */
+    fun screenOrigin(): androidx.compose.ui.geometry.Offset =
+        currentAbs().let { androidx.compose.ui.geometry.Offset(it.x.toFloat(), it.y.toFloat()) }
+
     private fun currentAbs(): FlyPoint {
         val m = mapper()
         return FlyPoint(m.absX(params.x), m.absY(params.y))
@@ -550,6 +555,7 @@ internal class FlyWindowRuntime(
         } else if (overlap > 0 && isAttached) {
             imeTop = currentAbs().y + windowSize.height - overlap
         }
+        FlyOverlayHost.reportKeyboard(this, if (imeVisible) imeTop else null)
         applyImeShift()
     }
 
