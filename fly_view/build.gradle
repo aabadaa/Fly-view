@@ -60,7 +60,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.aabadaa'
                 artifactId = 'fly-compose-view'
-                version = '2.0.3'
+                version = '2.1.0'
             }
         }
     }
