@@ -8,7 +8,7 @@ Show any composable **on top of other apps**. Draggable, snaps to the screen edg
 _Animated illustration of the sample app (not a screen recording) · [full quality: docs/demo.mp4](docs/demo.mp4)_
 
 
-**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Lifecycle](#window-lifecycle-shown-and-hidden) · [Placement](#placement-size-keyboard) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
+**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Lifecycle](#window-lifecycle-shown-and-hidden) · [Placement](#placement-size-keyboard) · [Popups & tooltips](#popups-menus-tooltips-snackbars-sheets) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
 
 ## Install
 
@@ -81,6 +81,7 @@ That is all: the window floats over other apps, can be dragged (it snaps to the 
 | Dock to an edge | `placement = FlyPlacement.Docked(FlyEdge.Bottom, FlySize.Fill)` |
 | Stay above the keyboard | default (`ime = FlyIme.Avoid`) |
 | A dialog | `FlyDialog(onDismissRequest) { }` |
+| A popup, menu, tooltip, snackbar, sheet | see [Popups](#popups-menus-tooltips-snackbars-sheets) |
 | A ViewModel for the window session | `rememberFlyViewModel { MyViewModel() }` |
 | Start from a widget / tile (Android 12+) | subclass `FlyLaunchActivity` |
 | Keep the process alive | `FlyOverlay.configure(service = MyFlyService::class.java)` |
@@ -216,6 +217,49 @@ FlyWindow("note", focusable = true,
 
 `ime = Avoid` (default, like v1): a docked-bottom or fullscreen window resizes, a floating one moves up while the keyboard shows and can't be dragged behind it (Android 11+). Typing needs `focusable = true`. Use `FlyIme.Ignore` to let the keyboard cover the window.
 
+## Popups, menus, tooltips, snackbars, sheets
+
+`Popup`, `DropdownMenu`, `TooltipBox`, the system text-selection toolbar and `ModalBottomSheet` need an activity window, so they fail inside a `FlyWindow`. These work there. They share **one placement engine** (`placePopup`, pure and unit-tested): the popup goes on the side you ask for, flips when there is no room, and stays inside the usable screen (system bars, cutout and, when known, the keyboard).
+
+| I want... | Use |
+|---|---|
+| A popup next to a button | `FlyPopup(anchor, onDismissRequest) { }` |
+| A dropdown menu | `FlyDropdownMenu(anchor, onDismissRequest) { FlyDropdownMenuItem("Share", onClick = ...) }` |
+| Know where an element is | `val anchor = rememberFlyAnchor()` + `Modifier.flyAnchor(anchor)` (or `Modifier.onScreenBounds { rect -> }`) |
+| A tooltip on long press | `FlyTooltipHost { ... }` around the windows + `Modifier.flyTooltip("Save")` |
+| A tooltip from code | `LocalFlyTooltips.current.show("Saved", rect)` or `FlyTooltipState.show` |
+| Cut/copy/paste/select all in a text field | `FlyTextToolbarProvider { TextField(...) }` inside the window |
+| A snackbar with Undo | `FlySnackbarHost(state)` + `state.showSnackbar("Deleted", "Undo")` (suspends, returns the result) |
+| A bottom sheet above the keyboard | `FlyBottomSheet(onDismissRequest) { }` |
+| Something else that has to leave its window | `FlyOverlayLayer(touchable, focusable) { Modifier.placeOnScreen { size -> pos } }` |
+| How far a window reaches under the keyboard | `val overlap by rememberFlyImeOverlap()` |
+| The usable screen rect | `rememberFlyUsableScreen()` |
+| A long press that does not click | `Modifier.flyLongPress { }` (haptic tick, consumes the click) |
+| See where every window is | `FlyOverlay.debugOutlines = true` |
+
+```kotlin
+FlyTooltipHost {                                   // once, around the windows
+    FlyWindow("note", focusable = true) {
+        var open by remember { mutableStateOf(false) }
+        val anchor = rememberFlyAnchor()
+        IconButton(onClick = { open = true }, modifier = Modifier.flyAnchor(anchor).flyTooltip("More")) { ... }
+        if (open) FlyDropdownMenu(anchor, onDismissRequest = { open = false }) {
+            FlyDropdownMenuItem("Share", onClick = { share(); open = false })
+        }
+    }
+}
+```
+
+Good to know:
+- **Anchors**: use `flyAnchor` (read when the popup opens). `onScreenBounds` reports at layout time, and a window that was moved (a drag, the lift above the keyboard) has no new layout, so its value can be stale. Do not use `positionOnScreen()` for popups for the same reason.
+- **Popups take the touch**: `FlyPopup`, menus, the text toolbar and sheets are drawn in a fullscreen layer that takes every touch. A touch outside calls `onDismissRequest` and does not reach what is below, like a dialog. For the text toolbar this means the tap that closes it does not move the cursor: a second tap does. Tooltips use a layer that takes no touch.
+- **Focus**: `focusable = true` (sheets always) takes the back button and the keyboard from the app below.
+- **Snackbar**: a small window docked to the bottom, the rest of the screen stays touchable. It is not themed by Material; give `snackbar = { data -> ... }` your own look. Same for `FlyTooltipHost(tooltip = ...)`.
+- **Look**: defaults are drawn with foundation only (the library has no Material dependency) in Material 3 colors, following the system dark theme. Everything takes your own content, composed in your theme.
+- **Keyboard**: popups avoid the keyboard when a window of yours knows where it is (a focusable window that it covers). Best effort.
+
+The sample's [popups window](app/src/main/java/com/abada/flyview/PopupsWindow.kt) has one demo per feature, and its [tooltip window](app/src/main/java/com/abada/flyview/TooltipWindow.kt) shows tooltips on their own.
+
 ## Service and lifetime
 
 The window needs no activity and no service, it lives as long as the process. Without a service Android may kill the process in the background and the windows disappear. A foreground service keeps it alive:
@@ -240,7 +284,7 @@ FlyOverlay.configure(service = MyFlyService::class.java)
 
 ## Testing
 
-The math and the state machines have no Android dependency and run as plain JVM tests (`fly_view/src/test`): snapping and dismiss zone, gravity independent positions, placement and size, visibility rules, duplicate keys, the dismiss effect state machine, closing hints.
+The math and the state machines have no Android dependency and run as plain JVM tests (`fly_view/src/test`): snapping and dismiss zone, popup placement (flip and clamp), gravity independent positions, placement and size, visibility rules, duplicate keys, the dismiss effect state machine, closing hints.
 
 | Layer | Package | Tested with |
 |---|---|---|

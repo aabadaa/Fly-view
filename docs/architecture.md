@@ -44,6 +44,7 @@ Screen (an activity)            -> FlyWindow / FlyItem -> composed in the screen
 | Keyboard | `ime = FlyIme.Avoid` (default): docked bottom and fullscreen resize, a floating window moves up and can't be dragged behind the keyboard (Android 11+). The keyboard top is worked out from the window's own insets (they only cover the part the keyboard overlaps, so it is combined with the window position and kept while the window is clear of the keyboard) | needs `focusable = true` |
 | Keys | `onKeyEvent` sees every key first, then the content's Compose key modifiers, then the back handling | fixes device quirks (a key reported as Back) |
 | Requests from outside | `Channel` + `send`, not `SharedFlow` | a `SharedFlow` drops a value when nobody collects yet |
+| Popups | One placement engine in the core (`placePopup`), one `FlyOverlayLayer` (a transparent fullscreen `FlyWindow`, `FlyIme.Ignore`, touchable or not, only while composed), and everything else (`FlyPopup`, `FlyDropdownMenu`, tooltips, `FlyTextToolbar`, `FlyBottomSheet`) is a thin composable on them. The snackbar is the exception: a window docked to the bottom | `Popup` needs an activity window. One engine means one place to fix flipping and clamping. A fullscreen layer can't let touches through its empty areas, so what must stay touch-through (tooltips) uses the untouchable variant and what needs a few touchable pixels (the snackbar) is a small window |
 | Minimum API | 26 | the overlay window type needs it |
 | Build | JDK 21 (Gradle daemon toolchain), library bytecode Java 17 | apps still on JDK 17 can use the library |
 
@@ -55,6 +56,12 @@ Screen (an activity)            -> FlyWindow / FlyItem -> composed in the screen
 
 **Placement**: `Floating` (position from the state, drag and snap apply), `Docked(edge, size, margin, insets)` (drag and snap are ignored, the floating position is kept), `Fullscreen`. Switching is instant, the content can animate itself.
 
+**Popups** (`PopupPlacement`, core; `FlyOverlayLayer.kt`, `FlyPopup.kt`, ... overlay): `placePopup` takes the anchor, the content size, the usable bounds, a preferred side and an alignment. It flips to the opposite side when the preferred one has no room (the side with more room when neither fits), then clamps inside the bounds with a margin; `keyboardTop` shortens the bounds. `FlyOverlayLayer` adds a fullscreen window and hides the screen-origin math: `Modifier.placeOnScreen` takes screen coordinates and subtracts the layer's origin. Origins and anchors are **not** read with `positionOnScreen()` or `View.getLocationOnScreen`: on a window that was moved by the runtime they return the position of the last layout (found on an emulator: a menu opened 500 px too high). The runtime knows the position it applied, so each window provides `LocalFlyWindowOrigin` and `FlyAnchor.bounds` adds it to `positionInWindow()` when read. Tooltips and `flyLongPress` watch the touch in the `Initial` pass and consume the rest of a long press so the element gets no click. The keyboard top comes from the focusable windows that the keyboard covers (`FlyOverlayHost.keyboardTop`, the smallest of their `imeTop`), `null` when unknown.
+
+**FlyTextToolbar** implements Compose's `TextToolbar` (`LocalTextToolbar`). The rect that `showMenu` receives is in the coordinates of the window of the text field, so the window origin is added before it goes to a `FlyPopup`. Labels default to the system strings (`android.R.string.cut` ...), so they are translated.
+
+**rememberFlyImeOverlap** reads `WindowInsets.ime` of the window and reports an overlap only after it lasted a grace time (200 ms): a window with `ime = Avoid` is lifted above the keyboard and the overlap goes back to 0 at once, so only an overlap that stays is a window too tall for the room left.
+
 **Closing hints**: `closingSoon` and `onClosingSoon` report `ProcessAtRisk` (the system is short on memory and no service runs), `OwnerStopping` and `HostStopping`. A hint, never a guarantee. `FlyOverlay.lastExitReason` tells why the previous process ended (Android 11+).
 
 **Foreground tracking**: an `ActivityLifecycleCallbacks` counter debounced 700 ms (a rotation is not the background), double-checked with the system.
@@ -63,6 +70,10 @@ Screen (an activity)            -> FlyWindow / FlyItem -> composed in the screen
 
 - A hidden window is removed and its content is disposed: keep state in a ViewModel or state holder. Items compose in the window, so the contributor's `CompositionLocal`s do not apply.
 - `FlyDialog` has no exit animation and no anchor yet.
+- Popups, menus, the text toolbar and sheets take every touch while they are open (a fullscreen touchable layer): the tap that closes them does not reach what is below. A compact window sized to the popup would avoid it but needs the popup size before the window exists.
+- One tooltip at a time per host, no exit animation on any popup, no hover trigger.
+- The keyboard top is known only through a focusable window that the keyboard covers, otherwise popups ignore the keyboard.
+- Snackbars are not themed by Material (no dependency): pass your own `snackbar` content.
 - The keyboard nudge of a floating window uses window insets (Android 11+) and is best effort.
 - Nothing runs when the process is killed.
 
@@ -79,6 +90,7 @@ The core is covered by unit tests. The parts that touch `WindowManager` and Comp
 7. Which `onTrimMemory` levels an overlay-only process really receives, and how long it survives in the background on AOSP, Samsung and Xiaomi.
 8. The keyboard nudge of a floating window.
 9. `FlyDialog` z-order when windows are added later.
+10. Run on an emulator (API 35, in the sample's popups window): popup, menu, tooltip, snackbar with Undo, bottom sheet above the keyboard and its back button, and the text toolbar next to a selection. Not run: the long press next to a scrolling parent, popups near the top/bottom/sides and with the keyboard open, rotation and cutouts, `debugOutlines`, `rememberFlyImeOverlap` with a tall window, a bottom sheet on a device with a navigation bar.
 
 ## Later
 
