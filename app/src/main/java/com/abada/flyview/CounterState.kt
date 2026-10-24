@@ -12,4 +12,6 @@ object CounterState {
     val isExpandableOpen = MutableStateFlow(false)
     val expanded = MutableStateFlow(false)
     val isPlaygroundOpen = MutableStateFlow(false)
+    val isPopupsOpen = MutableStateFlow(false)
+    val isTooltipOpen = MutableStateFlow(false)
 }

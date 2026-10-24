@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FLyViewTheme {
-                MainScreen(onShow = ::showCounter, onShowExpandable = ::showExpandable, onShowPlayground = ::showPlayground, onHide = { FlyOverlay.requestDismiss("counter") })
+                MainScreen(onShow = ::showCounter, onShowExpandable = ::showExpandable, onShowPlayground = ::showPlayground, onShowTooltip = ::showTooltip, onShowPopups = ::showPopups, onHide = { FlyOverlay.requestDismiss("counter") })
             }
         }
     }
@@ -39,6 +39,26 @@ class MainActivity : ComponentActivity() {
                     FlyOverlay.requestPermission(this@MainActivity)
             if (!allowed) return@launch
             CounterState.isPlaygroundOpen.value = true
+            FlyOverlay.start(this@MainActivity)
+        }
+    }
+
+    private fun showPopups() {
+        lifecycleScope.launch {
+            val allowed = FlyOverlay.hasPermission(this@MainActivity) ||
+                    FlyOverlay.requestPermission(this@MainActivity)
+            if (!allowed) return@launch
+            CounterState.isPopupsOpen.value = true
+            FlyOverlay.start(this@MainActivity)
+        }
+    }
+
+    private fun showTooltip() {
+        lifecycleScope.launch {
+            val allowed = FlyOverlay.hasPermission(this@MainActivity) ||
+                    FlyOverlay.requestPermission(this@MainActivity)
+            if (!allowed) return@launch
+            CounterState.isTooltipOpen.value = true
             FlyOverlay.start(this@MainActivity)
         }
     }
@@ -66,7 +86,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreen(onShow: () -> Unit, onShowExpandable: () -> Unit, onShowPlayground: () -> Unit, onHide: () -> Unit) {
+private fun MainScreen(onShow: () -> Unit, onShowExpandable: () -> Unit, onShowPlayground: () -> Unit, onShowTooltip: () -> Unit, onShowPopups: () -> Unit, onHide: () -> Unit) {
     // the floating window reads the same state: press + here or there, both show the same number
     val count by CounterState.count.collectAsState()
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -81,6 +101,9 @@ private fun MainScreen(onShow: () -> Unit, onShowExpandable: () -> Unit, onShowP
             Button(onClick = onShow) { Text("Show the floating counter") }
             Button(onClick = onShowExpandable) { Text("Show the expandable window") }
             Button(onClick = onShowPlayground) { Text("Show the keyboard + gesture playground") }
+            Button(onClick = onShowTooltip) { Text("Show the tooltip window") }
+            Button(onClick = onShowPopups) { Text("Show the popups window") }
+            Button(onClick = { FlyOverlay.debugOutlines = !FlyOverlay.debugOutlines }) { Text("Toggle debug outlines") }
             Button(onClick = onHide) { Text("Hide it") }
             Text("Go to another app: the counter stays on top.", style = MaterialTheme.typography.bodyMedium)
         }

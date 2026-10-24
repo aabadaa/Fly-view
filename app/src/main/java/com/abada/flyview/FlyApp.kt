@@ -21,5 +21,13 @@ class FlyApp : Application() {
             val open by CounterState.isPlaygroundOpen.collectAsState()
             if (open) PlaygroundWindow()
         }
+        FlyOverlay.contribute("popups") {
+            val open by CounterState.isPopupsOpen.collectAsState()
+            if (open) PopupsWindow()
+        }
+        FlyOverlay.contribute("tooltip") {
+            val open by CounterState.isTooltipOpen.collectAsState()
+            if (open) TooltipWindow()
+        }
     }
 }
