@@ -59,8 +59,8 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
                 groupId = 'com.github.aabadaa'
-                artifactId = 'fly-compose-view'
-                version = '2.1.2'
+                artifactId = 'fly_view' // must equal the module name: JitPack also publishes the module under its own name, and two names ship the same classes twice
+                version = '2.1.3'
             }
         }
     }
