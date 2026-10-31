@@ -8,7 +8,7 @@ Show any composable **on top of other apps**. Draggable, snaps to the screen edg
 _Animated illustration of the sample app (not a screen recording) · [full quality: docs/demo.mp4](docs/demo.mp4)_
 
 
-**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Lifecycle](#window-lifecycle-shown-and-hidden) · [Placement](#placement-size-keyboard) · [Popups & tooltips](#popups-menus-tooltips-snackbars-sheets) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Migrating from v1](#migrating-from-v1)
+**Jump to:** [Install](#install) · [Quick start](#quick-start) · [Cheat sheet](#cheat-sheet) · [Windows](#windows) · [Items](#items-several-screens-one-window) · [Dismissal](#dismissal) · [Lifecycle](#window-lifecycle-shown-and-hidden) · [Placement](#placement-size-keyboard) · [Popups & tooltips](#popups-menus-tooltips-snackbars-sheets) · [Service](#service-and-lifetime) · [Testing](#testing) · [Troubleshooting](#troubleshooting) · [Agent skill](#use-it-with-a-coding-agent) · [Migrating from v1](#migrating-from-v1)
 
 ## Install
 
@@ -313,6 +313,10 @@ The math and the state machines have no Android dependency and run as plain JVM 
 | The text field has no keyboard | `focusable = true` |
 | A request is lost | use a `Channel` with `send`, not a `SharedFlow` |
 | State resets when the window hides | content state is not kept across hide/show, keep it in a ViewModel or state holder |
+
+## Use it with a coding agent
+
+[`skills/fly-view/SKILL.md`](skills/fly-view/SKILL.md) is a skill that teaches an agent the latest API. How to add it to Claude Code or another agent: [docs/agent-skill.md](docs/agent-skill.md).
 
 ## Migrating from v1
 
