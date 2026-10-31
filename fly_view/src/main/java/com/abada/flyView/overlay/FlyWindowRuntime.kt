@@ -412,6 +412,9 @@ internal class FlyWindowRuntime(
 
     /** Puts the window at the absolute [abs] position (keeps the keyboard shift) */
     private fun place(abs: FlyPoint) {
+        // a docked or fullscreen window keeps the offsets applyFrame gave it, the floating position
+        // measured from its gravity would move it away from its edge
+        if (!isFloating()) return
         val m = mapper()
         val x = m.paramX(abs.x)
         imeShift = shiftFor(abs)
