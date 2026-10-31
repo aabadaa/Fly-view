@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = 'com.abada.modulesfactory'
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.abada.modulesfactory"
